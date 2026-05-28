@@ -12,6 +12,50 @@ line will open when Phase 3 actually programs a display mode.
 
 ---
 
+## [0.0.10] — 2026-05-28
+
+**Phase 4.0: multi-mode support.** Mode list grows from a single
+hardcoded 1024×768 entry to five 4:3 VESA modes — 640×480, 800×600,
+1024×768, 1280×1024, 1600×1200 — all at 60 Hz @ 32 bpp. Screen
+preferences now offers real choices. No EDID readback yet (Phase 4.1).
+
+### Added
+
+- `kModeList[]` in `mode.cpp` — five `ast_mode_info` entries ported
+  from Linux `ast_vbios.c` (`res_640x480` / `res_800x600` /
+  `res_1024x768` / `res_1280x1024` / `res_1600x1200`). All use DCLK
+  indices already in the table (VCLK25_175 through VCLK162).
+- `kHaikuModes[]` in `accelerant.cpp` — matching `display_mode`
+  entries (same array indexing as `kModeList`).
+- `ast_find_mode()` and `find_mode_index()` helpers — width/height
+  lookups so `SET_DISPLAY_MODE` knows which table entry to program.
+- Framebuffer-size validation in `SET_DISPLAY_MODE`. Mode is rejected
+  with `B_NO_MEMORY` if `width × height × 4 > framebufferSize`. On
+  the AST2400's 16 MB BAR0 this allows up to ~2048×2048 single-buffer
+  @ 32 bpp; the check exists mostly to guard future format/depth
+  expansion.
+
+### Changed
+
+- `ast_program_mode_1024x768()` renamed to `ast_program_mode(const
+  ast_mode_info*)`. Pitch + start-address programming now uses the
+  passed-in mode's width instead of the previous hardcoded 1024×4.
+- `ACCELERANT_MODE_COUNT` returns 5 (was 1).
+- `GET_MODE_LIST` returns all five modes.
+- `GET_FRAME_BUFFER_CONFIG` returns the current mode's stride (was
+  hardcoded 1024×4).
+- `GET_DISPLAY_MODE` returns the actually-active mode (tracked in
+  `sCurrentModeIndex`), default 1024×768.
+
+### Skipped
+
+- 1920×1080@60 — needs the extended DCLK table (`VCLK148_5` is at
+  index 0x14, beyond our current 0x00–0x0f) and exercises the
+  `AST2500PreCatchCRT` flag path we haven't ported. Will land in
+  Phase 4.2 alongside 16:9 modes.
+
+---
+
 ## [0.0.9] — 2026-05-28
 
 **First fully working Phase 3 release** — clean 1024×768 Haiku desktop on

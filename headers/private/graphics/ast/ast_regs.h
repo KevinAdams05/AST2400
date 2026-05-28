@@ -142,6 +142,8 @@ struct ast_dclk_info {
 /* Exported tables (defined in mode.cpp). */
 extern const struct ast_std_table kStdTables[5];
 extern const struct ast_dclk_info kDclkTable[];
+extern const struct ast_mode_info kModeList[];
+extern const uint32 kModeCount;
 
 
 #endif	// AST_REGS_H

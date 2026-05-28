@@ -34,6 +34,7 @@
  */
 
 #include "accelerant.h"
+#include "ast_regs.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -274,36 +275,75 @@ ast_get_accelerant_device_info(accelerant_device_info* info)
 }
 
 
-// ===== Mode list — Phase 2: one hardcoded mode =====
+// ===== Mode list — Phase 4.0: 5 hardcoded 4:3 VESA modes =====
 //
-// 1024x768 @ 60Hz, 32bpp, classic VESA timing. Real EDID-driven mode
-// list generation is Phase 3.
+// One Haiku display_mode entry per kModeList[] entry in mode.cpp. They
+// share array index, so accelerant slot N programs mode.cpp slot N.
+// All currently at 32 bpp.
 
-static const display_mode kPhase2Mode = {
-	{
-		65000,			// pixel_clock kHz — VESA 1024x768@60
-		1024, 1048, 1184, 1344,	// h_display, sync_start, sync_end, total
-		768,  771,  777,  806,	// v_display, sync_start, sync_end, total
-		B_POSITIVE_HSYNC | B_POSITIVE_VSYNC
-	},
-	// Reverted from B_RGB32_BIG after 0.0.6 hung the boot. Linux uses
-	// DRM_FORMAT_XRGB8888 (memory BGR-, same as B_RGB32_LITTLE) so this
-	// should be the right value; the purple-tinted-color issue seen in
-	// 0.0.5 is a chip-register problem to be tracked down separately,
-	// not a Haiku color-space mismatch.
-	B_RGB32_LITTLE,	// color space
-	1024,			// virtual_width
-	768,			// virtual_height
-	0,				// h_display_start
-	0,				// v_display_start
-	0				// flags
+#define AST_HAIKU_MODE(pixelClockKhz, hAct, hSyncStart, hSyncEnd, hTotal, \
+		vAct, vSyncStart, vSyncEnd, vTotal, syncFlags) \
+	{ \
+		{ \
+			pixelClockKhz, \
+			hAct, hSyncStart, hSyncEnd, hTotal, \
+			vAct, vSyncStart, vSyncEnd, vTotal, \
+			syncFlags \
+		}, \
+		B_RGB32_LITTLE, \
+		hAct, vAct, \
+		0, 0, 0 \
+	}
+
+
+static const display_mode kHaikuModes[] = {
+	/* 640x480@60   — 25.175 MHz, neg-H neg-V */
+	AST_HAIKU_MODE( 25175,  640,  656,  752,  800,
+		480, 490, 492, 525, 0),
+	/* 800x600@60   — 40 MHz, pos-H pos-V */
+	AST_HAIKU_MODE( 40000,  800,  840,  968, 1056,
+		600, 601, 605, 628,
+		B_POSITIVE_HSYNC | B_POSITIVE_VSYNC),
+	/* 1024x768@60  — 65 MHz, neg-H neg-V */
+	AST_HAIKU_MODE( 65000, 1024, 1048, 1184, 1344,
+		768, 771, 777, 806, 0),
+	/* 1280x1024@60 — 108 MHz, pos-H pos-V */
+	AST_HAIKU_MODE(108000, 1280, 1328, 1440, 1688,
+		1024, 1025, 1028, 1066,
+		B_POSITIVE_HSYNC | B_POSITIVE_VSYNC),
+	/* 1600x1200@60 — 162 MHz, pos-H pos-V */
+	AST_HAIKU_MODE(162000, 1600, 1664, 1856, 2160,
+		1200, 1201, 1204, 1250,
+		B_POSITIVE_HSYNC | B_POSITIVE_VSYNC),
 };
+
+static const uint32 kHaikuModeCount
+	= sizeof(kHaikuModes) / sizeof(kHaikuModes[0]);
+
+
+/*! Lookup helper: find the kHaikuModes index whose width/height matches
+ *  the requested mode. Returns -1 if no match. */
+static int32
+find_mode_index(uint32 width, uint32 height)
+{
+	for (uint32 i = 0; i < kHaikuModeCount; i++) {
+		if (kHaikuModes[i].virtual_width == width
+				&& kHaikuModes[i].virtual_height == height)
+			return (int32)i;
+	}
+	return -1;
+}
+
+
+/*! Track the currently-active mode so GET_DISPLAY_MODE +
+ *  GET_FRAME_BUFFER_CONFIG agree with reality. */
+static uint32 sCurrentModeIndex = 2;	// default to 1024x768@60
 
 
 extern "C" uint32
 ast_accelerant_mode_count()
 {
-	return 1;
+	return kHaikuModeCount;
 }
 
 
@@ -312,7 +352,8 @@ ast_get_mode_list(display_mode* list)
 {
 	if (list == NULL)
 		return B_BAD_VALUE;
-	list[0] = kPhase2Mode;
+	for (uint32 i = 0; i < kHaikuModeCount; i++)
+		list[i] = kHaikuModes[i];
 	return B_OK;
 }
 
@@ -323,19 +364,21 @@ ast_propose_display_mode(display_mode* target, const display_mode* /*low*/,
 {
 	if (target == NULL)
 		return B_BAD_VALUE;
-	// Phase 2: only accept our one hardcoded mode. Phase 3 will validate
-	// against PLL limits, framebuffer size, EDID range, etc.
-	if (target->virtual_width != kPhase2Mode.virtual_width
-			|| target->virtual_height != kPhase2Mode.virtual_height) {
-		*target = kPhase2Mode;
+	int32 index = find_mode_index(target->virtual_width,
+		target->virtual_height);
+	if (index < 0) {
+		// Fall back to our default mode (1024×768) and signal that the
+		// target was rewritten so app_server can decide what to do.
+		*target = kHaikuModes[2];
 		return B_BAD_VALUE;
 	}
-	*target = kPhase2Mode;
+	*target = kHaikuModes[index];
 	return B_OK;
 }
 
 
-extern "C" status_t ast_program_mode_1024x768();
+/*! Defined in mode.cpp. */
+extern "C" status_t ast_program_mode(const ast_mode_info* mode);
 
 
 extern "C" status_t
@@ -346,14 +389,29 @@ ast_set_display_mode(display_mode* mode)
 	TRACE("set_display_mode(%u x %u)\n",
 		mode->virtual_width, mode->virtual_height);
 
-	if (mode->virtual_width != kPhase2Mode.virtual_width
-			|| mode->virtual_height != kPhase2Mode.virtual_height)
+	int32 index = find_mode_index(mode->virtual_width,
+		mode->virtual_height);
+	if (index < 0)
 		return B_NOT_SUPPORTED;
 
-	// Phase 3: actually program the chip for 1024x768@60 @ 32bpp.
-	// See mode.cpp for the ported sequence (Linux drivers/gpu/drm/ast/
-	// ast_mode.c).
-	return ast_program_mode_1024x768();
+	// Validate the framebuffer is large enough. (Phase 4.0 always uses
+	// 32 bpp + width-stride; the 16 MB BAR0 on AST2400 covers everything
+	// up through 2048×2048 single-buffer, so this check exists mostly
+	// to catch future format/depth changes.)
+	uint32 needed = mode->virtual_width * mode->virtual_height * 4;
+	if (needed > gInfo->sharedInfo->framebufferSize) {
+		TRACE("set_display_mode: %u x %u (%u bytes) exceeds framebuffer"
+			" (%" B_PRIu32 " bytes)\n",
+			mode->virtual_width, mode->virtual_height, needed,
+			gInfo->sharedInfo->framebufferSize);
+		return B_NO_MEMORY;
+	}
+
+	status_t status = ast_program_mode(&kModeList[index]);
+	if (status != B_OK)
+		return status;
+	sCurrentModeIndex = (uint32)index;
+	return B_OK;
 }
 
 
@@ -362,7 +420,7 @@ ast_get_display_mode(display_mode* currentMode)
 {
 	if (currentMode == NULL)
 		return B_BAD_VALUE;
-	*currentMode = kPhase2Mode;
+	*currentMode = kHaikuModes[sCurrentModeIndex];
 	return B_OK;
 }
 
@@ -375,8 +433,8 @@ ast_get_frame_buffer_config(frame_buffer_config* config)
 
 	config->frame_buffer = (void*)gInfo->framebuffer;
 	config->frame_buffer_dma = (void*)gInfo->sharedInfo->framebufferPhys;
-	// Stride for a 1024-wide, 32bpp framebuffer.
-	config->bytes_per_row = kPhase2Mode.virtual_width * 4;
+	config->bytes_per_row
+		= kHaikuModes[sCurrentModeIndex].virtual_width * 4;
 	return B_OK;
 }
 

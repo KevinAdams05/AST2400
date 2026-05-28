@@ -52,30 +52,14 @@ will replace the hardcoded mode with EDID-driven multi-mode support.
 |---|---|---|---|---|
 | Supermicro | X11SSH-LN4F (Xeon E3-1230v5) | AST2400 | `1a03:2000` (rev 0x30) | ✅ Phase 3 — clean 1024×768@60Hz desktop, correct colors |
 
-### Phase 3 — Haiku desktop running on the AST2400
-
-![Haiku desktop at 1024×768 on AST2400](docs/screenshots/phase3-1024x768.png)
+### Screenshot
 
 Haiku Screen preferences reports the active driver as **ASPEED Graphics
 (AST2400)** at **1024 × 768**, **32 bits/pixel**, **60 Hz** — driven
 through the BMC's onboard VGA output on a Supermicro X11SSH-LN4F.
 
-### Driver bring-up syslog (Phase 1 verification)
+![Haiku desktop at 1024×768 on AST2400](docs/screenshots/phase3-1024x768.png)
 
-```
-ast: init_hardware()
-ast: init_driver()
-ast: probed graphics/ast_060000: AST2400 rev 0x30 at [bus 6 device 0 function 0], BAR0 16 MB, BAR1 0xdf000000 (131072 B)
-ast: init_driver(): 1 device(s) ready
-ast: ast_open(graphics/ast_060000)
-ast:   BAR0 (framebuffer): phys 0xde000000 size 16777216 bytes (16 MB)
-ast:   BAR1 (MMIO regs):   phys 0xdf000000 size 131072 bytes
-ast: ast_open: device opened — AST2400 rev 0x30
-ast.accel: init_accelerant(fd=7)
-ast.accel: init_accelerant: AST chip gen 4 rev 0x30, fb 16 MB, MMIO 131072 B
-ast.mode: program_mode: 1024x768@60Hz 32bpp on AST chip gen 4
-ast.mode: program_mode: done
-```
 
 ---
 

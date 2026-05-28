@@ -145,24 +145,55 @@ const struct ast_dclk_info kDclkTable[] = {
 };
 
 
-// === Hardcoded mode info for 1024x768@60 — Phase 3 single mode.
-// === Ported from Linux ast_vbios.c res_1024x768[0]. ===
+// === Mode table for Phase 4.0. All 4:3 VESA-standard 60Hz modes whose
+// === pixel clocks fall within our existing DCLK table (VCLK25_175 –
+// === VCLK162). Ported from Linux ast_vbios.c res_640x480 / res_800x600
+// === / res_1024x768 / res_1280x1024 / res_1600x1200. ===
 
-const struct ast_mode_info kMode1024x768 = {
-	1344,	// hTotal
-	1024,	// hActive
-	24,		// hFrontPorch
-	136,	// hSync
-	806,	// vTotal
-	768,	// vActive
-	3,		// vFrontPorch
-	6,		// vSync
-	AST_VCLK65,
-	AST_FLAG_NHSYNC | AST_FLAG_NVSYNC | AST_FLAG_CHARX8DOT,
-	60,		// refreshRate
-	1,		// refreshRateIndex
-	0x31	// modeId
+const struct ast_mode_info kModeList[] = {
+	/* 640x480@60 — VESA */
+	{ 800, 640, 16, 96, 525, 480, 10, 2, AST_VCLK25_175,
+	  AST_FLAG_NHSYNC | AST_FLAG_NVSYNC | AST_FLAG_CHARX8DOT,
+	  60, 1, 0x2e },
+
+	/* 800x600@60 — VESA */
+	{ 1056, 800, 40, 128, 628, 600, 1, 4, AST_VCLK40,
+	  AST_FLAG_PHSYNC | AST_FLAG_PVSYNC | AST_FLAG_CHARX8DOT,
+	  60, 2, 0x30 },
+
+	/* 1024x768@60 — VESA. Originally Phase 3 single mode. */
+	{ 1344, 1024, 24, 136, 806, 768, 3, 6, AST_VCLK65,
+	  AST_FLAG_NHSYNC | AST_FLAG_NVSYNC | AST_FLAG_CHARX8DOT,
+	  60, 1, 0x31 },
+
+	/* 1280x1024@60 — VESA */
+	{ 1688, 1280, 48, 112, 1066, 1024, 1, 3, AST_VCLK108,
+	  AST_FLAG_PHSYNC | AST_FLAG_PVSYNC | AST_FLAG_CHARX8DOT,
+	  60, 1, 0x32 },
+
+	/* 1600x1200@60 — VESA */
+	{ 2160, 1600, 64, 192, 1250, 1200, 1, 3, AST_VCLK162,
+	  AST_FLAG_PHSYNC | AST_FLAG_PVSYNC | AST_FLAG_CHARX8DOT,
+	  60, 1, 0x33 },
 };
+
+const uint32 kModeCount = sizeof(kModeList) / sizeof(kModeList[0]);
+
+
+/*! Look up an entry in kModeList by (width, height, refresh). Returns
+ *  NULL if no match. Used by SET_DISPLAY_MODE to find which mode to
+ *  program. */
+const struct ast_mode_info*
+ast_find_mode(uint32 width, uint32 height, uint32 refreshHz)
+{
+	for (uint32 i = 0; i < kModeCount; i++) {
+		const ast_mode_info& m = kModeList[i];
+		if (m.hActive == width && m.vActive == height
+				&& m.refreshRate == refreshHz)
+			return &kModeList[i];
+	}
+	return NULL;
+}
 
 
 // === MMIO register access ==================================================
@@ -545,9 +576,13 @@ dump_color_regs(const char* when)
 // === Public entry point ==================================================
 
 extern "C" status_t
-ast_program_mode_1024x768()
+ast_program_mode(const ast_mode_info* mode)
 {
-	TRACE("program_mode: 1024x768@60Hz 32bpp on AST chip gen %d\n",
+	if (mode == NULL)
+		return B_BAD_VALUE;
+
+	TRACE("program_mode: %ux%u@%uHz 32bpp on AST chip gen %d\n",
+		mode->hActive, mode->vActive, mode->refreshRate,
 		(int)gInfo->sharedInfo->chipGeneration);
 
 	dump_color_regs("BEFORE");
@@ -559,7 +594,7 @@ ast_program_mode_1024x768()
 	ast_open_key();
 
 	// Tell the IPMI/iKVM viewer what mode we're going to.
-	ast_set_vbios_mode_reg(kMode1024x768);
+	ast_set_vbios_mode_reg(*mode);
 
 	// Mystery sequence from Linux's ast_crtc_helper_mode_set_nofb — CRA1
 	// gets 0x06 right before std_reg programming. Bit 1 disables legacy
@@ -571,19 +606,19 @@ ast_program_mode_1024x768()
 	ast_set_std_reg(kStdTables[AST_STD_TRUEC_MODE]);
 
 	// Program CRTC timing from our mode info.
-	ast_set_crtc_reg(kMode1024x768);
+	ast_set_crtc_reg(*mode);
 
 	// PLL for the pixel clock.
-	ast_set_dclk_reg(kMode1024x768.dclkIndex);
+	ast_set_dclk_reg(mode->dclkIndex);
 
 	// Sync polarity.
-	ast_set_sync_reg(kMode1024x768);
+	ast_set_sync_reg(*mode);
 
 	// Color depth (32 bpp).
 	ast_set_color_reg(32);
 
-	// Framebuffer pitch and scanout base.
-	ast_set_offset_reg(1024 * 4);
+	// Framebuffer pitch (width * 4 bytes for 32bpp) and scanout base.
+	ast_set_offset_reg(mode->hActive * 4);
 	ast_set_start_address(0);
 
 	dump_color_regs("AFTER");
