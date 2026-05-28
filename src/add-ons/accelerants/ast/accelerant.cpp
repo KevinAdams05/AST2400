@@ -64,6 +64,14 @@
 ast_accelerant_info* gInfo = NULL;
 
 
+/*! Defined in mode.cpp. */
+extern "C" status_t ast_program_mode(const ast_mode_info* mode);
+
+/*! Defined in ddc.cpp. */
+extern "C" status_t ast_read_edid_block(uint8 buffer[128]);
+extern "C" void ast_log_edid(const uint8 buffer[128]);
+
+
 /*! Convenience: clone an area from the kernel driver's address space into
  *  ours and return the cloned id + a pointer to the mapping. */
 static status_t
@@ -164,6 +172,16 @@ ast_init_accelerant(int deviceFd)
 		gInfo->sharedInfo->chipRevision,
 		gInfo->sharedInfo->framebufferSize / (1024 * 1024),
 		gInfo->sharedInfo->registersSize);
+
+	// Phase 4.1: try to read the monitor's EDID via the AST DDC bus and
+	// log it. Doesn't yet feed back into the mode list — that's Phase 4.2.
+	uint8 edid[128];
+	if (ast_read_edid_block(edid) == B_OK) {
+		ast_log_edid(edid);
+	} else {
+		TRACE("init_accelerant: no usable EDID; keeping hardcoded mode list\n");
+	}
+
 	return B_OK;
 }
 
@@ -375,10 +393,6 @@ ast_propose_display_mode(display_mode* target, const display_mode* /*low*/,
 	*target = kHaikuModes[index];
 	return B_OK;
 }
-
-
-/*! Defined in mode.cpp. */
-extern "C" status_t ast_program_mode(const ast_mode_info* mode);
 
 
 extern "C" status_t

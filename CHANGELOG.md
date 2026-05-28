@@ -12,6 +12,42 @@ line will open when Phase 3 actually programs a display mode.
 
 ---
 
+## [0.0.11] — 2026-05-28
+
+**Phase 4.1: EDID readback via the AST's I2C/DDC bus.** Reads the
+128-byte EDID block from the connected monitor on accelerant init
+and dumps it to syslog as raw hex plus parsed manufacturer / preferred
+timing. Does NOT yet filter the mode list — that's Phase 4.2 —
+mode list remains the same five hardcoded 4:3 modes from 0.0.10.
+
+### Added
+
+- `src/add-ons/accelerants/ast/ddc.cpp` — hand-rolled I2C state
+  machine on top of the AST's `CR_B7` SDA/SCL bit-bang interface.
+  Bit-bang pattern ported from Linux `drivers/gpu/drm/ast/ast_ddc.c`
+  (MIT-licensed upstream; per style-guide §16.3 our combined work is
+  GPL v2). Hand-rolls the I2C protocol (`start` / `stop` /
+  `write_byte` / `read_byte`) rather than using Linux's
+  `i2c_algo_bit_data` infrastructure — that's a kernel-side dep we
+  don't have userspace equivalent for in Haiku accelerants.
+- `ast_read_edid_block(uint8 buffer[128])` — addresses the EDID
+  EEPROM at I²C address 0x50, register offset 0, and reads 128
+  bytes. Validates the 8-byte EDID header signature on return.
+- `ast_log_edid()` — diagnostic dump of the raw hex plus parsed
+  manufacturer code (3-letter packed), product ID, serial number,
+  manufacture week/year, EDID version, and the preferred detailed
+  timing (pixel clock + active resolution).
+
+### Hooked into init flow
+
+- `init_accelerant` now calls `ast_read_edid_block()` after cloning
+  the BAR areas. On EDID-header mismatch (no monitor / bus error /
+  DDC pull-up issues) it logs and continues — driver keeps working
+  with the hardcoded mode list. Phase 4.2 will gate mode-list
+  generation on this.
+
+---
+
 ## [0.0.10] — 2026-05-28
 
 **Phase 4.0: multi-mode support.** Mode list grows from a single

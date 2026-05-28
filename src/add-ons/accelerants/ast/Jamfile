@@ -5,6 +5,7 @@ UsePrivateHeaders [ FDirName graphics ast ] ;
 
 Addon ast.accelerant :
 	accelerant.cpp
+	ddc.cpp
 	mode.cpp
 	: be libaccelerantscommon.a
 ;
