@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 480" font-family="'Segoe UI', system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bar0Grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fef3c7"/>
+      <stop offset="100%" stop-color="#fde68a"/>
+    </linearGradient>
+    <linearGradient id="bar1Grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dbeafe"/>
+      <stop offset="100%" stop-color="#bfdbfe"/>
+    </linearGradient>
+    <linearGradient id="hdrAmber" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#b7791f"/>
+      <stop offset="100%" stop-color="#d69e2e"/>
+    </linearGradient>
+    <linearGradient id="hdrBlue" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#2b6cb0"/>
+      <stop offset="100%" stop-color="#3182ce"/>
+    </linearGradient>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="112%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#00000020"/>
+    </filter>
+  </defs>
+
+  <text x="450" y="34" text-anchor="middle" font-size="20" font-weight="700" fill="#1a202c">AST2400 PCI BAR Layout</text>
+  <text x="450" y="56" text-anchor="middle" font-size="12" fill="#4a5568">Verified on Supermicro X11SSH-LN4F · PCI bus 6 device 0 function 0</text>
+
+  <!-- Address axis -->
+  <line x1="120" y1="100" x2="120" y2="440" stroke="#a0aec0" stroke-width="1.5"/>
+  <text x="110" y="100" text-anchor="end" font-size="11" font-family="monospace" fill="#4a5568">low addr</text>
+  <text x="110" y="442" text-anchor="end" font-size="11" font-family="monospace" fill="#4a5568">high addr</text>
+  <text x="50" y="270" font-size="13" font-weight="600" fill="#4a5568" transform="rotate(-90 50 270)">x86_64 physical address space</text>
+
+  <!-- BAR0 — framebuffer (16 MB) -->
+  <rect x="140" y="110" width="500" height="180" rx="8" fill="url(#bar0Grad)" stroke="#b7791f" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="140" y="110" width="500" height="28" rx="8" fill="url(#hdrAmber)"/>
+  <text x="160" y="129" font-size="14" font-weight="700" fill="white">BAR0  ·  Framebuffer  ·  16 MB</text>
+
+  <text x="160" y="160" font-size="12" font-family="monospace" fill="#1a202c">phys range:  0xde000000 – 0xdeffffff</text>
+  <text x="160" y="180" font-size="12" font-family="monospace" fill="#1a202c">size:        0x01000000  (16,777,216 bytes)</text>
+  <text x="160" y="200" font-size="12" font-family="monospace" fill="#1a202c">use:         pixel scanout buffer (32 bpp)</text>
+  <text x="160" y="220" font-size="12" font-family="monospace" fill="#1a202c">written by:  app_server (via cloned area in accel)</text>
+  <text x="160" y="240" font-size="12" font-family="monospace" fill="#1a202c">read by:     AST display engine, scanline by scanline</text>
+
+  <text x="160" y="270" font-size="11" fill="#4a5568">Fits up through 2048×2048 @ 32 bpp single-buffer.</text>
+
+  <!-- Size annotation -->
+  <text x="660" y="200" font-size="12" font-family="monospace" fill="#92400e">0x01000000 bytes</text>
+  <text x="660" y="218" font-size="11" fill="#92400e">= 16 MB</text>
+
+  <!-- BAR1 — MMIO (128 KB) -->
+  <rect x="140" y="320" width="500" height="100" rx="8" fill="url(#bar1Grad)" stroke="#2b6cb0" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="140" y="320" width="500" height="28" rx="8" fill="url(#hdrBlue)"/>
+  <text x="160" y="339" font-size="14" font-weight="700" fill="white">BAR1  ·  MMIO register window  ·  128 KB</text>
+
+  <text x="160" y="370" font-size="12" font-family="monospace" fill="#1a202c">phys range:  0xdf000000 – 0xdf01ffff</text>
+  <text x="160" y="390" font-size="12" font-family="monospace" fill="#1a202c">VGA ports:   BAR1 + 0x380 + (vga_port - 0x380)</text>
+  <text x="160" y="410" font-size="12" font-family="monospace" fill="#1a202c">             e.g. CRTC index port 0x3D4 → BAR1 + 0x3D4</text>
+
+  <text x="660" y="380" font-size="12" font-family="monospace" fill="#1e3a8a">0x00020000 bytes</text>
+  <text x="660" y="398" font-size="11" fill="#1e3a8a">= 128 KB</text>
+
+  <!-- Caption -->
+  <rect x="50" y="450" width="800" height="0" stroke="none" fill="none"/>
+</svg>

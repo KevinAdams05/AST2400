@@ -86,6 +86,16 @@ If the driver panics at boot, boot to safe mode and delete the `.hpkg` from
 
 ---
 
+## Documentation
+
+- [`CHANGELOG.md`](CHANGELOG.md) — per-version summary in Keep-a-Changelog format
+- [`docs/technical-documentation.md`](docs/technical-documentation.md) — full technical write-up with register-level explanations, SVG diagrams, and the bring-up failure post-mortems
+- [`docs/STYLE_GUIDE.md`](docs/STYLE_GUIDE.md) — coding style for the project
+- [`docs/diagrams/`](docs/diagrams/) — SVG diagrams referenced from the technical doc (driver architecture, BAR layout, mode-set sequence, DDC I²C state machine, CR_A8 byte-order toggle)
+- [`docs/screenshots/`](docs/screenshots/) — visual verification of each phase
+
+---
+
 ## Building from source
 
 Building from source is not required — install the `.hpkg` above. If you

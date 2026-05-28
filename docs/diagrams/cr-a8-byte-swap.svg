@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" font-family="'Segoe UI', system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="goodGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dcfce7"/>
+      <stop offset="100%" stop-color="#bbf7d0"/>
+    </linearGradient>
+    <linearGradient id="badGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fee2e2"/>
+      <stop offset="100%" stop-color="#fecaca"/>
+    </linearGradient>
+    <linearGradient id="hdrGreen" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#15803d"/>
+      <stop offset="100%" stop-color="#16a34a"/>
+    </linearGradient>
+    <linearGradient id="hdrRed" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#b91c1c"/>
+      <stop offset="100%" stop-color="#dc2626"/>
+    </linearGradient>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="112%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#00000020"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <polygon points="0 0, 10 4, 0 8" fill="#4a5568"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="32" text-anchor="middle" font-size="20" font-weight="700" fill="#1a202c">CR_A8 bit 1  —  the R↔B byte-order toggle</text>
+  <text x="450" y="52" text-anchor="middle" font-size="12" fill="#4a5568">Diagnostic register-dump comparison that solved the 0.0.5 purple-tinted-color bug</text>
+
+  <!-- LEFT: VBIOS state (correct) -->
+  <rect x="40" y="80" width="400" height="240" rx="10" fill="url(#goodGrad)" stroke="#16a34a" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="40" y="80" width="400" height="32" rx="10" fill="url(#hdrGreen)"/>
+  <text x="60" y="101" font-size="14" font-weight="700" fill="white">VBIOS state — correct colors</text>
+
+  <text x="60" y="135" font-size="12" font-family="monospace" fill="#14532d">CR_A3 (depth)   = 0x08</text>
+  <text x="60" y="155" font-size="12" font-family="monospace" fill="#14532d">CR_A8 (format)  = 0x00     ← bit 1 cleared</text>
+
+  <text x="60" y="190" font-size="12" fill="#14532d">Display content (VESA fallback writing</text>
+  <text x="60" y="208" font-size="12" fill="#14532d">BGRx bytes into framebuffer):</text>
+  <rect x="60" y="220" width="280" height="32" fill="#3182ce" stroke="#1e3a8a" stroke-width="1"/>
+  <text x="200" y="240" text-anchor="middle" font-size="14" font-weight="600" fill="white">navigation blue</text>
+  <rect x="60" y="258" width="120" height="32" fill="#f59e0b" stroke="#92400e" stroke-width="1"/>
+  <text x="120" y="278" text-anchor="middle" font-size="12" font-weight="600" fill="white">Deskbar yellow</text>
+  <rect x="190" y="258" width="120" height="32" fill="#ffffff" stroke="#a0aec0" stroke-width="1"/>
+  <text x="250" y="278" text-anchor="middle" font-size="12" font-weight="600" fill="#1a202c">window white</text>
+
+  <!-- RIGHT: Linux value (R↔B swap) -->
+  <rect x="460" y="80" width="400" height="240" rx="10" fill="url(#badGrad)" stroke="#dc2626" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="460" y="80" width="400" height="32" rx="10" fill="url(#hdrRed)"/>
+  <text x="480" y="101" font-size="14" font-weight="700" fill="white">Linux's value — R↔B swap on our chip</text>
+
+  <text x="480" y="135" font-size="12" font-family="monospace" fill="#7f1d1d">CR_A3 (depth)   = 0x08</text>
+  <text x="480" y="155" font-size="12" font-family="monospace" fill="#7f1d1d">CR_A8 (format)  = 0x02     ← bit 1 set</text>
+
+  <text x="480" y="190" font-size="12" fill="#7f1d1d">Same BGRx framebuffer bytes interpreted</text>
+  <text x="480" y="208" font-size="12" fill="#7f1d1d">with R and B swapped:</text>
+  <rect x="480" y="220" width="280" height="32" fill="#a855f7" stroke="#581c87" stroke-width="1"/>
+  <text x="620" y="240" text-anchor="middle" font-size="14" font-weight="600" fill="white">purple (R + B, no G)</text>
+  <rect x="480" y="258" width="120" height="32" fill="#06b6d4" stroke="#155e75" stroke-width="1"/>
+  <text x="540" y="278" text-anchor="middle" font-size="12" font-weight="600" fill="white">cyan (was yellow)</text>
+  <rect x="610" y="258" width="120" height="32" fill="#ffffff" stroke="#a0aec0" stroke-width="1"/>
+  <text x="670" y="278" text-anchor="middle" font-size="12" font-weight="600" fill="#1a202c">white unchanged</text>
+
+  <!-- Explanation -->
+  <rect x="40" y="350" width="820" height="220" rx="10" fill="#fef9c3" stroke="#a16207" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="60" y="376" font-size="14" font-weight="700" fill="#78350f">What we learned</text>
+
+  <text x="60" y="405" font-size="12" fill="#1a202c">  •  Haiku and Linux both write <tspan font-family="monospace" font-weight="600">BGRx</tspan> bytes to the framebuffer in 32 bpp little-endian.</text>
+  <text x="60" y="425" font-size="12" fill="#1a202c">     <tspan font-family="monospace">DRM_FORMAT_XRGB8888</tspan> on x86 Linux ≡ Haiku's <tspan font-family="monospace">B_RGB32_LITTLE</tspan> ≡ memory order B G R x.</text>
+  <text x="60" y="450" font-size="12" fill="#1a202c">  •  Setting <tspan font-family="monospace" font-weight="600">CR_A8 bit 1 = 1</tspan> tells our AST2400 to read the same bytes as <tspan font-family="monospace">R G B x</tspan> instead.</text>
+  <text x="60" y="470" font-size="12" fill="#1a202c">     The chip is interpreting bytes 0 and 2 of every pixel in swapped roles, giving us R↔B swap.</text>
+  <text x="60" y="495" font-size="12" fill="#1a202c">  •  Linux uses bit 1 = 1 and gets correct colors — its <tspan font-family="monospace">ast_post.c</tspan> silicon init writes</text>
+  <text x="60" y="515" font-size="12" fill="#1a202c">     something else that compensates. We haven't ported that yet.</text>
+  <text x="60" y="540" font-size="12" fill="#1a202c">  •  <tspan font-weight="700">Fix:</tspan> in our <tspan font-family="monospace">ast_set_color_reg(32)</tspan>, write <tspan font-family="monospace">jregA8 = 0x00</tspan> (overriding Linux's 0x02).</text>
+  <text x="60" y="558" font-size="12" fill="#1a202c">     Matches the VBIOS-known-good state. Verified clean colors in 0.0.9.</text>
+
+</svg>

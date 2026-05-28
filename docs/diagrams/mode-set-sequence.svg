@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 760" font-family="'Segoe UI', system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="stepGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f0f4f8"/>
+    </linearGradient>
+    <linearGradient id="headerGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#2b6cb0"/>
+      <stop offset="100%" stop-color="#3182ce"/>
+    </linearGradient>
+    <linearGradient id="entryGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dcfce7"/>
+      <stop offset="100%" stop-color="#bbf7d0"/>
+    </linearGradient>
+    <linearGradient id="endGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="100%" stop-color="#fcd34d"/>
+    </linearGradient>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="112%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#00000020"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <polygon points="0 0, 10 4, 0 8" fill="#4a5568"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="32" text-anchor="middle" font-size="20" font-weight="700" fill="#1a202c">ast_program_mode() — Mode-Set Sequence</text>
+  <text x="450" y="52" text-anchor="middle" font-size="12" fill="#4a5568">Ten steps from a Haiku display_mode request to a clean scan-out</text>
+
+  <!-- Entry -->
+  <rect x="320" y="72" width="260" height="36" rx="18" fill="url(#entryGrad)" stroke="#16a34a" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="450" y="95" text-anchor="middle" font-size="13" font-weight="600" fill="#14532d">ast_program_mode(mode)</text>
+
+  <!-- Step 1: wait for vretrace -->
+  <rect x="100" y="130" width="700" height="48" rx="8" fill="url(#stepGrad)" stroke="#a0aec0" stroke-width="1.2" filter="url(#shadow)"/>
+  <rect x="100" y="130" width="36" height="48" rx="8" fill="url(#headerGrad)"/>
+  <text x="118" y="160" text-anchor="middle" font-size="14" font-weight="700" fill="white">1</text>
+  <text x="150" y="152" font-size="13" font-weight="600" fill="#1a202c">ast_wait_for_vretrace()</text>
+  <text x="150" y="170" font-size="11" fill="#4a5568">Poll VGAIR1 bit 3 (vertical refresh in progress). 100 ms timeout. Avoid mid-frame writes.</text>
+
+  <!-- Step 2: open key -->
+  <rect x="100" y="190" width="700" height="48" rx="8" fill="url(#stepGrad)" stroke="#a0aec0" stroke-width="1.2" filter="url(#shadow)"/>
+  <rect x="100" y="190" width="36" height="48" rx="8" fill="url(#headerGrad)"/>
+  <text x="118" y="220" text-anchor="middle" font-size="14" font-weight="700" fill="white">2</text>
+  <text x="150" y="212" font-size="13" font-weight="600" fill="#1a202c">ast_open_key()</text>
+  <text x="150" y="230" font-size="11" fill="#4a5568" font-family="monospace">CR80 ← 0xA8   — unlocks extension regs (CR80+)</text>
+
+  <!-- Step 3: vbios mode reg -->
+  <rect x="100" y="250" width="700" height="48" rx="8" fill="url(#stepGrad)" stroke="#a0aec0" stroke-width="1.2" filter="url(#shadow)"/>
+  <rect x="100" y="250" width="36" height="48" rx="8" fill="url(#headerGrad)"/>
+  <text x="118" y="280" text-anchor="middle" font-size="14" font-weight="700" fill="white">3</text>
+  <text x="150" y="272" font-size="13" font-weight="600" fill="#1a202c">ast_set_vbios_mode_reg(mode)</text>
+  <text x="150" y="290" font-size="11" fill="#4a5568" font-family="monospace">CR8D, CR8E, CR91-CR97 ← mode metadata for IPMI / iKVM viewers</text>
+
+  <!-- Step 4: CRA1 -->
+  <rect x="100" y="310" width="700" height="48" rx="8" fill="url(#stepGrad)" stroke="#a0aec0" stroke-width="1.2" filter="url(#shadow)"/>
+  <rect x="100" y="310" width="36" height="48" rx="8" fill="url(#headerGrad)"/>
+  <text x="118" y="340" text-anchor="middle" font-size="14" font-weight="700" fill="white">4</text>
+  <text x="150" y="332" font-size="13" font-weight="600" fill="#1a202c">CRA1 ← 0x06</text>
+  <text x="150" y="350" font-size="11" fill="#4a5568" font-family="monospace">Disable legacy VGA I/O port access; MMIO-only from here on</text>
+
+  <!-- Step 5: set_std_reg -->
+  <rect x="100" y="370" width="700" height="48" rx="8" fill="url(#stepGrad)" stroke="#a0aec0" stroke-width="1.2" filter="url(#shadow)"/>
+  <rect x="100" y="370" width="36" height="48" rx="8" fill="url(#headerGrad)"/>
+  <text x="118" y="400" text-anchor="middle" font-size="14" font-weight="700" fill="white">5</text>
+  <text x="150" y="392" font-size="13" font-weight="600" fill="#1a202c">ast_set_std_reg(kStdTables[TRUEC])</text>
+  <text x="150" y="410" font-size="11" fill="#4a5568" font-family="monospace">VGAMR + SR01-04 + CR00-18 + AR00-14 + GR00-08  ← 32 bpp defaults</text>
+
+  <!-- Step 6: set_crtc_reg -->
+  <rect x="100" y="430" width="700" height="48" rx="8" fill="url(#stepGrad)" stroke="#a0aec0" stroke-width="1.2" filter="url(#shadow)"/>
+  <rect x="100" y="430" width="36" height="48" rx="8" fill="url(#headerGrad)"/>
+  <text x="118" y="460" text-anchor="middle" font-size="14" font-weight="700" fill="white">6</text>
+  <text x="150" y="452" font-size="13" font-weight="600" fill="#1a202c">ast_set_crtc_reg(mode)</text>
+  <text x="150" y="470" font-size="11" fill="#4a5568" font-family="monospace">CR00-CR16 + extended CRAC/CRAD/CRAE  ← per-mode h/v timing</text>
+
+  <!-- Step 7: set_dclk_reg (PLL) -->
+  <rect x="100" y="490" width="700" height="48" rx="8" fill="url(#stepGrad)" stroke="#a0aec0" stroke-width="1.2" filter="url(#shadow)"/>
+  <rect x="100" y="490" width="36" height="48" rx="8" fill="url(#headerGrad)"/>
+  <text x="118" y="520" text-anchor="middle" font-size="14" font-weight="700" fill="white">7</text>
+  <text x="150" y="512" font-size="13" font-weight="600" fill="#1a202c">ast_set_dclk_reg(mode.dclkIndex)</text>
+  <text x="150" y="530" font-size="11" fill="#4a5568" font-family="monospace">CRC0, CRC1, CRBB  ← PLL parameters from kDclkTable[idx]</text>
+
+  <!-- Step 8: set_sync_reg -->
+  <rect x="100" y="550" width="700" height="48" rx="8" fill="url(#stepGrad)" stroke="#a0aec0" stroke-width="1.2" filter="url(#shadow)"/>
+  <rect x="100" y="550" width="36" height="48" rx="8" fill="url(#headerGrad)"/>
+  <text x="118" y="580" text-anchor="middle" font-size="14" font-weight="700" fill="white">8</text>
+  <text x="150" y="572" font-size="13" font-weight="600" fill="#1a202c">ast_set_sync_reg(mode)</text>
+  <text x="150" y="590" font-size="11" fill="#4a5568" font-family="monospace">VGAMR bits 6-7  ← H/V sync polarity (positive/negative)</text>
+
+  <!-- Step 9: set_color_reg -->
+  <rect x="100" y="610" width="700" height="48" rx="8" fill="url(#stepGrad)" stroke="#a0aec0" stroke-width="1.2" filter="url(#shadow)"/>
+  <rect x="100" y="610" width="36" height="48" rx="8" fill="url(#headerGrad)"/>
+  <text x="118" y="640" text-anchor="middle" font-size="14" font-weight="700" fill="white">9</text>
+  <text x="150" y="632" font-size="13" font-weight="600" fill="#1a202c">ast_set_color_reg(32)</text>
+  <text x="150" y="650" font-size="11" fill="#4a5568" font-family="monospace">CRA0=0x70, CRA3=0x08, CRA8=0x00  ← 32 bpp BGRx (CRA8 bit 1 cleared!)</text>
+
+  <!-- Step 10: offset + start -->
+  <rect x="100" y="670" width="700" height="48" rx="8" fill="url(#stepGrad)" stroke="#a0aec0" stroke-width="1.2" filter="url(#shadow)"/>
+  <rect x="100" y="670" width="36" height="48" rx="8" fill="url(#headerGrad)"/>
+  <text x="118" y="700" text-anchor="middle" font-size="14" font-weight="700" fill="white">10</text>
+  <text x="150" y="692" font-size="13" font-weight="600" fill="#1a202c">ast_set_offset_reg + ast_set_start_address</text>
+  <text x="150" y="710" font-size="11" fill="#4a5568" font-family="monospace">CR13 + CRB0  ← pitch       ·       CR0C+CR0D+CRAF  ← scanout origin (0)</text>
+
+  <!-- Done -->
+  <rect x="320" y="730" width="260" height="28" rx="14" fill="url(#endGrad)" stroke="#92400e" stroke-width="1.5"/>
+  <text x="450" y="749" text-anchor="middle" font-size="12" font-weight="600" fill="#78350f">return B_OK → display lit at new mode</text>
+
+</svg>

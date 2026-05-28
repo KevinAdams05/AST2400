@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 560" font-family="'Segoe UI', system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="userlandGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8f4fd"/>
+      <stop offset="100%" stop-color="#d0e8f7"/>
+    </linearGradient>
+    <linearGradient id="kernelGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fde8e8"/>
+      <stop offset="100%" stop-color="#f7d0d0"/>
+    </linearGradient>
+    <linearGradient id="chipGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fef3c7"/>
+      <stop offset="100%" stop-color="#fde68a"/>
+    </linearGradient>
+    <linearGradient id="fileGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f0f4f8"/>
+    </linearGradient>
+    <linearGradient id="headerGradBlue" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#2b6cb0"/>
+      <stop offset="100%" stop-color="#3182ce"/>
+    </linearGradient>
+    <linearGradient id="headerGradRed" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#c53030"/>
+      <stop offset="100%" stop-color="#e53e3e"/>
+    </linearGradient>
+    <linearGradient id="headerGradAmber" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#b7791f"/>
+      <stop offset="100%" stop-color="#d69e2e"/>
+    </linearGradient>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="112%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#00000020"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <polygon points="0 0, 10 4, 0 8" fill="#4a5568"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="32" text-anchor="middle" font-size="20" font-weight="700" fill="#1a202c">AST2400 Driver Architecture</text>
+  <line x1="240" y1="42" x2="660" y2="42" stroke="#cbd5e0" stroke-width="1"/>
+
+  <!-- Userland section -->
+  <rect x="40" y="65" width="820" height="170" rx="8" fill="url(#userlandGrad)" stroke="#4299e1" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="40" y="65" width="820" height="28" rx="8" fill="url(#headerGradBlue)"/>
+  <text x="60" y="84" font-size="14" font-weight="700" fill="white">app_server  ·  Haiku Userland</text>
+
+  <!-- Accelerant addon -->
+  <rect x="80" y="110" width="320" height="100" rx="6" fill="url(#fileGrad)" stroke="#4299e1" stroke-width="1.2"/>
+  <text x="240" y="130" text-anchor="middle" font-size="13" font-weight="600" fill="#1a202c">ast.accelerant</text>
+  <text x="100" y="150" font-size="11" fill="#4a5568" font-family="monospace">accelerant.cpp  · hooks + dispatch</text>
+  <text x="100" y="166" font-size="11" fill="#4a5568" font-family="monospace">mode.cpp       · CRTC + PLL + DAC</text>
+  <text x="100" y="182" font-size="11" fill="#4a5568" font-family="monospace">ddc.cpp        · I²C bit-bang / EDID</text>
+  <text x="100" y="200" font-size="10" fill="#718096">Loaded by app_server via load_add_on()</text>
+
+  <!-- gInfo (clones) -->
+  <rect x="430" y="110" width="400" height="100" rx="6" fill="#fefce8" stroke="#a16207" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <text x="630" y="130" text-anchor="middle" font-size="13" font-weight="600" fill="#1a202c">gInfo (user-space clones)</text>
+  <text x="450" y="150" font-size="11" fill="#4a5568" font-family="monospace">sharedInfo    → ast_shared_info clone</text>
+  <text x="450" y="166" font-size="11" fill="#4a5568" font-family="monospace">registers     → BAR1 MMIO clone</text>
+  <text x="450" y="182" font-size="11" fill="#4a5568" font-family="monospace">framebuffer   → BAR0 fb clone</text>
+  <text x="450" y="200" font-size="10" fill="#718096">All via clone_area() at init_accelerant</text>
+
+  <!-- Kernel/User boundary -->
+  <line x1="30" y1="260" x2="870" y2="260" stroke="#718096" stroke-width="2" stroke-dasharray="8,4"/>
+  <rect x="375" y="248" width="150" height="22" rx="11" fill="#edf2f7" stroke="#a0aec0" stroke-width="1"/>
+  <text x="450" y="263" text-anchor="middle" font-size="11" font-weight="600" fill="#4a5568">User / Kernel boundary</text>
+
+  <!-- Kernel section -->
+  <rect x="40" y="285" width="820" height="150" rx="8" fill="url(#kernelGrad)" stroke="#e53e3e" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="40" y="285" width="820" height="28" rx="8" fill="url(#headerGradRed)"/>
+  <text x="60" y="304" font-size="14" font-weight="700" fill="white">ast (kernel driver)</text>
+
+  <rect x="80" y="330" width="320" height="80" rx="6" fill="url(#fileGrad)" stroke="#e53e3e" stroke-width="1.2"/>
+  <text x="240" y="350" text-anchor="middle" font-size="13" font-weight="600" fill="#1a202c">driver.cpp</text>
+  <text x="100" y="370" font-size="11" fill="#4a5568" font-family="monospace">init_hardware / init_driver / find_device</text>
+  <text x="100" y="386" font-size="11" fill="#4a5568" font-family="monospace">ast_open  → map_physical_memory BARs</text>
+  <text x="100" y="402" font-size="11" fill="#4a5568" font-family="monospace">ast_control → ioctl dispatch (SMAP-safe)</text>
+
+  <!-- Per-device state -->
+  <rect x="430" y="330" width="400" height="80" rx="6" fill="#fef9c3" stroke="#a16207" stroke-width="1.2"/>
+  <text x="630" y="350" text-anchor="middle" font-size="13" font-weight="600" fill="#1a202c">ast_device_info + ast_shared_info area</text>
+  <text x="450" y="370" font-size="11" fill="#4a5568" font-family="monospace">sharedArea       (B_CLONEABLE_AREA)</text>
+  <text x="450" y="386" font-size="11" fill="#4a5568" font-family="monospace">registersArea    (BAR1, 128 KB)</text>
+  <text x="450" y="402" font-size="11" fill="#4a5568" font-family="monospace">framebufferArea  (BAR0, 16 MB)</text>
+
+  <!-- Hardware section -->
+  <rect x="40" y="460" width="820" height="85" rx="8" fill="url(#chipGrad)" stroke="#b7791f" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="40" y="460" width="820" height="28" rx="8" fill="url(#headerGradAmber)"/>
+  <text x="60" y="479" font-size="14" font-weight="700" fill="white">ASPEED AST2400 (PCI 1a03:2000, rev 0x30)</text>
+
+  <text x="80" y="510" font-size="11" fill="#1a202c" font-family="monospace">BAR0  framebuffer  16 MB  @ phys 0xde000000</text>
+  <text x="80" y="528" font-size="11" fill="#1a202c" font-family="monospace">BAR1  MMIO regs   128 KB  @ phys 0xdf000000   (VGA I/O ports @ BAR1+0x380)</text>
+
+  <!-- Arrows: cloning relationships -->
+  <line x1="630" y1="330" x2="630" y2="210" stroke="#4a5568" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <text x="640" y="270" font-size="10" fill="#4a5568" font-style="italic">clone_area</text>
+
+  <!-- Arrow from accelerant down into kernel for ioctl -->
+  <line x1="240" y1="210" x2="240" y2="330" stroke="#4a5568" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="250" y="275" font-size="10" fill="#4a5568" font-style="italic">ioctl(AST_GET_PRIVATE_DATA)</text>
+
+  <!-- Kernel to hardware -->
+  <line x1="240" y1="410" x2="240" y2="460" stroke="#4a5568" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="250" y="438" font-size="10" fill="#4a5568" font-style="italic">map_physical_memory</text>
+
+</svg>
