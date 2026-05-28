@@ -142,6 +142,11 @@ const struct ast_dclk_info kDclkTable[] = {
 	{0x85, 0x24, 0x00},		/* 0d: VCLK135     */
 	{0x67, 0x22, 0x00},		/* 0e: VCLK157_5   */
 	{0x6a, 0x22, 0x00},		/* 0f: VCLK162     */
+	{0x4d, 0x4c, 0x80},		/* 10: VCLK154     */
+	{0x68, 0x6f, 0x80},		/* 11: VCLK83_5    */
+	{0x28, 0x49, 0x80},		/* 12: VCLK106_5   */
+	{0x37, 0x49, 0x80},		/* 13: VCLK146_25  */
+	{0x1f, 0x45, 0x80},		/* 14: VCLK148_5 — 1920x1080@60 */
 };
 
 
@@ -175,6 +180,15 @@ const struct ast_mode_info kModeList[] = {
 	{ 2160, 1600, 64, 192, 1250, 1200, 1, 3, AST_VCLK162,
 	  AST_FLAG_PHSYNC | AST_FLAG_PVSYNC | AST_FLAG_CHARX8DOT,
 	  60, 1, 0x33 },
+
+	/* 1920x1080@60 — CEA / EDID preferred timing for most modern
+	 * desktop monitors. AST2500PreCatchCRT flag from Linux only fires
+	 * on AST2500/2600 (quirks->crtc_hsync_precatch_needed), so it's a
+	 * no-op for our AST2400 path and we don't set it. */
+	{ 2200, 1920, 88, 44, 1125, 1080, 4, 5, AST_VCLK148_5,
+	  AST_FLAG_PHSYNC | AST_FLAG_PVSYNC | AST_FLAG_CHARX8DOT
+		| AST_FLAG_WIDESCREEN | AST_FLAG_NEWMODEINFO,
+	  60, 1, 0x38 },
 };
 
 const uint32 kModeCount = sizeof(kModeList) / sizeof(kModeList[0]);

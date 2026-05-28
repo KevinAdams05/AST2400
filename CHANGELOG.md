@@ -7,8 +7,47 @@ All notable changes to the AST2400 (unofficial) driver are recorded here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 the project follows [Semantic Versioning](https://semver.org/).
 
-The 0.0.x line is the **Phase 1** (probe + bind) release series. The 0.1.x
-line will open when Phase 3 actually programs a display mode.
+The 0.0.x line was the experimental Phase 1–4.1 development run. The
+0.1.x line starts at 0.1.2 — the driver is now mode-set capable
+(Phase 3, 0.0.9), multi-mode (Phase 4.0, 0.0.10), and EDID-aware in
+the diagnostic sense (Phase 4.1, 0.0.11). Versions 0.1.0 and 0.1.1
+are reserved retroactively for those milestones and were never built.
+
+---
+
+## [0.1.2] — 2026-05-28
+
+First non-experimental release line. Adds **1920×1080@60** to the
+mode list and extends the PLL parameter table to cover the
+148.5 MHz pixel clock most desktop LCD monitors prefer.
+
+### Added
+
+- **1920×1080@60 mode** — CEA standard timing, ported from Linux
+  `ast_vbios.c` `res_1920x1080[0]`. Uses VCLK148_5 (PLL index 0x14).
+- **Extended DCLK table** from 16 entries to 21, adding indices
+  0x10 (VCLK154), 0x11 (VCLK83_5), 0x12 (VCLK106_5), 0x13
+  (VCLK146_25), 0x14 (VCLK148_5). Ported verbatim from Linux's
+  `ast_2000_dclk_table[]`. The first four are added for table
+  completeness even though our current mode list only references
+  VCLK148_5.
+
+### Skipped flags
+
+- `AST_FLAG_AST2500PRECATCH` — set on the 1920×1080 mode entry to
+  match Linux upstream, but it's a no-op on AST2400 because the
+  conditional check (`crtc_hsync_precatch_needed`) only fires on
+  AST2500/2600 silicon. We carry the flag for forward compatibility
+  when AST2500/2600 silicon-init lands.
+
+### Skipped (still)
+
+- EDID-driven mode-list filtering — Phase 4.2 will compare the
+  EDID's supported timings against our hardcoded mode list and hide
+  any that the monitor doesn't actually claim to support.
+- 16:9 / widescreen modes other than 1920×1080 (1280×720, 1366×768,
+  1600×900, etc.). Plenty of room in the DCLK table now, just need
+  to add the entries.
 
 ---
 

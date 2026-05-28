@@ -333,6 +333,10 @@ static const display_mode kHaikuModes[] = {
 	AST_HAIKU_MODE(162000, 1600, 1664, 1856, 2160,
 		1200, 1201, 1204, 1250,
 		B_POSITIVE_HSYNC | B_POSITIVE_VSYNC),
+	/* 1920x1080@60 — 148.5 MHz, pos-H pos-V — CEA standard */
+	AST_HAIKU_MODE(148500, 1920, 2008, 2052, 2200,
+		1080, 1084, 1089, 1125,
+		B_POSITIVE_HSYNC | B_POSITIVE_VSYNC),
 };
 
 static const uint32 kHaikuModeCount

@@ -90,6 +90,11 @@
 #define AST_VCLK135					0x0d
 #define AST_VCLK157_5				0x0e
 #define AST_VCLK162					0x0f
+#define AST_VCLK154					0x10
+#define AST_VCLK83_5				0x11
+#define AST_VCLK106_5				0x12
+#define AST_VCLK146_25				0x13
+#define AST_VCLK148_5				0x14	/* 1920x1080@60 */
 
 
 /* === VBIOS "std table" index — controls color depth via stdtable selection === */
