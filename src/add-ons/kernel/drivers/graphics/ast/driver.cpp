@@ -167,6 +167,58 @@ generation_name(ast_chip_generation generation)
 }
 
 
+/*! Validate that BAR0 (framebuffer) and BAR1 (MMIO) have been assigned
+ *  by the BIOS / Haiku PCI bus manager. Haiku ticket #3 (open since
+ *  2005) means the bus manager does not allocate BARs that the BIOS
+ *  left unprogrammed; on affected boards we get base=0 / size=0 and
+ *  any attempt to map those BARs will fail in confusing ways
+ *  (map_physical_memory(0, ...) usually returns garbage or panics).
+ *
+ *  Returns B_OK if both BARs look usable, an error otherwise. Logs a
+ *  clear diagnostic with a pointer to Haiku #3 on failure so users
+ *  can find the upstream root cause. */
+static status_t
+validate_bars(const pci_info& info)
+{
+	phys_addr_t fbPhys = (phys_addr_t)info.u.h0.base_registers[0];
+	uint32 fbSize = info.u.h0.base_register_sizes[0];
+	phys_addr_t mmioPhys = (phys_addr_t)info.u.h0.base_registers[1];
+	uint32 mmioSize = info.u.h0.base_register_sizes[1];
+
+	if (fbPhys == 0 || fbSize == 0) {
+		TRACE_ERROR("PCI BAR0 (framebuffer) unassigned at "
+			"[bus %u device %u function %u]: base=0x%" B_PRIxPHYSADDR
+			" size=%" B_PRIu32 ". This is Haiku ticket #3 "
+			"(PCI bus_manager does no memory resource assignment). "
+			"Refusing to bind; VESA fallback will take over.\n",
+			info.bus, info.device, info.function, fbPhys, fbSize);
+		return B_DEV_RESOURCE_CONFLICT;
+	}
+	if (mmioPhys == 0 || mmioSize == 0) {
+		TRACE_ERROR("PCI BAR1 (MMIO regs) unassigned at "
+			"[bus %u device %u function %u]: base=0x%" B_PRIxPHYSADDR
+			" size=%" B_PRIu32 ". This is Haiku ticket #3 "
+			"(PCI bus_manager does no memory resource assignment). "
+			"Refusing to bind; VESA fallback will take over.\n",
+			info.bus, info.device, info.function, mmioPhys, mmioSize);
+		return B_DEV_RESOURCE_CONFLICT;
+	}
+
+	// Sanity: BARs below 1 MB physical are almost certainly system DRAM,
+	// not a real device window. Catches BIOS-left-stale-default cases
+	// where the value is e.g. 0x10 (default reset value of some chipsets).
+	if (fbPhys < 0x100000 || mmioPhys < 0x100000) {
+		TRACE_ERROR("PCI BARs at suspiciously low addresses "
+			"[bus %u device %u function %u]: BAR0=0x%" B_PRIxPHYSADDR
+			" BAR1=0x%" B_PRIxPHYSADDR ". Refusing to bind.\n",
+			info.bus, info.device, info.function, fbPhys, mmioPhys);
+		return B_DEV_RESOURCE_CONFLICT;
+	}
+
+	return B_OK;
+}
+
+
 /*! Walk PCI for matching devices, allocate device_info entries, and log a
  *  short inventory line for each. Returns the number of devices accepted. */
 static int32
@@ -185,6 +237,9 @@ probe_devices()
 				MAX_AST_DEVICES);
 			break;
 		}
+
+		if (validate_bars(info) != B_OK)
+			continue;
 
 		ast_device_info* device
 			= (ast_device_info*)malloc(sizeof(ast_device_info));

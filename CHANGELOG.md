@@ -15,6 +15,43 @@ are reserved retroactively for those milestones and were never built.
 
 ---
 
+## [0.1.3] — 2026-05-28
+
+**Defensive hardening for Haiku PCI BAR-assignment bug.**
+
+### Added
+
+- **`validate_bars(const pci_info&)`** in the kernel driver, called
+  from `probe_devices` before a device is accepted. Refuses to bind
+  with `B_DEV_RESOURCE_CONFLICT` if BAR0 (framebuffer) or BAR1
+  (MMIO) has either base=0 or size=0 — the signature of Haiku
+  [ticket #3](https://dev.haiku-os.org/ticket/3) ("PCI bus_manager
+  does no memory resource assignment", filed 2005-03-29 by Marcus
+  Overhagen and still open). Also rejects BARs at physical
+  addresses below 1 MB (system DRAM territory).
+- On failure, the syslog gets a clear error line pointing at Haiku
+  #3 instead of an obscure `map_physical_memory` error or, worse, a
+  successful map that goes to bogus memory.
+
+### Why
+
+Without the check, an unassigned BAR0 would feed `0` into
+`map_physical_memory(0, 16 MB, ...)`. Depending on Haiku's safety
+checks that either: (a) maps physical address 0, which usually has
+system DRAM and isn't catastrophic but produces nonsense scanout;
+(b) returns an error that wasn't anticipated; or (c) hits a
+KDL. None are good user experiences. On affected boards the driver
+now stays out of the way and VESA fallback takes over.
+
+Note that the chip we ship for — the BMC-integrated AST2400/2500/2600
+on Supermicro / Dell / HPE / Asus enterprise boards — is virtually
+never affected, because BMC silicon is always-on and BIOS always
+sets up its BARs correctly. The check is for the less-common case of
+a PCI AST card in a board whose BIOS leaves discrete-GPU BARs
+unprogrammed.
+
+---
+
 ## [0.1.2] — 2026-05-28
 
 First non-experimental release line. Adds **1920×1080@60** to the
