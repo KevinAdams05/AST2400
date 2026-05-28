@@ -12,6 +12,29 @@ line will open when Phase 3 actually programs a display mode.
 
 ---
 
+## [0.0.4] — 2026-05-28
+
+Fixes two Phase 2 bring-up bugs found on first install of 0.0.3.
+
+### Fixed
+
+- **Accelerant init failed silently** — the kernel driver created the
+  shared_info, MMIO, and framebuffer areas with only
+  `B_KERNEL_READ_AREA | B_KERNEL_WRITE_AREA`. The accelerant then
+  failed to clone them from user space (areas weren't marked
+  cloneable), `init_accelerant()` returned an error, app_server
+  silently moved on to VESA. Added `B_CLONEABLE_AREA` to all three
+  area creates, matching radeon_hd's pattern at
+  `src/add-ons/kernel/drivers/graphics/radeon_hd/device.cpp`.
+- **Accelerant logging didn't reach syslog** — the original
+  `fputs(stderr)` from inside app_server's address space doesn't go
+  anywhere visible. Switched to `_sPrintf()` (matching
+  radeon_hd/accelerant.cpp:39), with `#undef TRACE` first to override
+  `<Debug.h>`'s release-build no-op definition. `ast.accel:` lines
+  now appear in syslog.
+
+---
+
 ## [0.0.3] — 2026-05-28
 
 Phase 2 accelerant skeleton lands. The driver now ships both a kernel

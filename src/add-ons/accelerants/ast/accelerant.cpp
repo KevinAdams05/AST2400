@@ -42,16 +42,22 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+#include <Debug.h>
+
 
 #define TRACE_AST_ACCEL		1
 
+// <Debug.h> defines TRACE() as a no-op in release builds; override it
+// so accelerant logs always land in syslog via _sPrintf().
+#undef TRACE
+
 #if TRACE_AST_ACCEL
-#	define TRACE(x...) \
-		do { char _b[256]; snprintf(_b, sizeof(_b), "ast.accel: " x); \
-			fputs(_b, stderr); } while (0)
+#	define TRACE(x...) _sPrintf("ast.accel: " x)
 #else
-#	define TRACE(x...) do {} while (0)
+#	define TRACE(x...) ((void)0)
 #endif
+
+#define ERROR(x...) _sPrintf("ast.accel: ERROR: " x)
 
 
 ast_accelerant_info* gInfo = NULL;

@@ -356,7 +356,7 @@ ast_open(const char* name, uint32 /*flags*/, void** cookie)
 		AST_DRIVER_NAME, info.bus, info.device, info.function);
 	device->registersArea = map_physical_memory(areaName, registersPhys,
 		registersSize, B_ANY_KERNEL_ADDRESS,
-		B_KERNEL_READ_AREA | B_KERNEL_WRITE_AREA,
+		B_KERNEL_READ_AREA | B_KERNEL_WRITE_AREA | B_CLONEABLE_AREA,
 		(void**)&device->registers);
 	if (device->registersArea < B_OK) {
 		TRACE_ERROR("failed to map MMIO BAR: %s\n",
@@ -369,7 +369,7 @@ ast_open(const char* name, uint32 /*flags*/, void** cookie)
 		AST_DRIVER_NAME, info.bus, info.device, info.function);
 	device->framebufferArea = map_physical_memory(areaName, framebufferPhys,
 		framebufferSize, B_ANY_KERNEL_ADDRESS,
-		B_KERNEL_READ_AREA | B_KERNEL_WRITE_AREA,
+		B_KERNEL_READ_AREA | B_KERNEL_WRITE_AREA | B_CLONEABLE_AREA,
 		(void**)&device->framebuffer);
 	if (device->framebufferArea < B_OK) {
 		TRACE_ERROR("failed to map framebuffer BAR: %s\n",
@@ -385,7 +385,7 @@ ast_open(const char* name, uint32 /*flags*/, void** cookie)
 	device->sharedArea = create_area(areaName, (void**)&device->sharedInfo,
 		B_ANY_KERNEL_ADDRESS,
 		ROUND_TO_PAGE_SIZE(sizeof(ast_shared_info)), B_FULL_LOCK,
-		B_KERNEL_READ_AREA | B_KERNEL_WRITE_AREA);
+		B_KERNEL_READ_AREA | B_KERNEL_WRITE_AREA | B_CLONEABLE_AREA);
 	if (device->sharedArea < B_OK) {
 		TRACE_ERROR("failed to create shared area: %s\n",
 			strerror(device->sharedArea));
