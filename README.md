@@ -4,9 +4,9 @@
 **Bug reports (please attach listdev output, syslog, and/or screenshots)
 and PRs welcome! See "Logging Bugs / How to Help" section below.**
 
-# AST2400 (Unofficial) — Haiku Driver
+# AST2400 - Haiku GraphicsDriver
 
-Native Haiku graphics driver for the **ASPEED AST2400 / AST2500 / AST2600**
+Haiku graphics driver for the **ASPEED AST2400 / AST2500 / AST2600**
 family of integrated BMC GPUs. These chips are found on most Supermicro,
 Dell, HPE, Asus server-line, and other enterprise server motherboards;
 the BMC's onboard VGA is typically the board's default display output
@@ -131,6 +131,7 @@ and include the PCI ID + revision.
 
 Please adhere to the [`docs/STYLE_GUIDE.md`](docs/STYLE_GUIDE.md) for coding conventions
 before opening a PR. There is a PR checklist that outlines a few key things to check.
+
 ---
 
 ## Why GPL v2 (not MIT)

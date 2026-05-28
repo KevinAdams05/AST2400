@@ -473,7 +473,14 @@ ast_set_color_reg(uint32 bitsPerPixel)
 		default:
 			jregA0 = 0x70;
 			jregA3 = 0x08;
-			jregA8 = 0x02;
+			// Linux sets bit 1 of CR_A8 for 32bpp; on our AST2400 with
+			// Haiku's BGR- byte order in memory this produces R↔B
+			// swapped colors. Per-boot register dump (0.0.8) showed the
+			// VBIOS leaves bit 1 clear in 32bpp mode and that
+			// configuration scans out the same memory with correct
+			// colors. Linux must compensate for this in ast_post.c
+			// silicon-init code we haven't ported yet.
+			jregA8 = 0x00;
 			break;
 	}
 	set_index_reg_mask(AST_IO_VGACRI, 0xa0, 0x8f, jregA0);
@@ -506,6 +513,35 @@ ast_set_start_address(uint32 offset)
 }
 
 
+// === Color/format register diagnostic dump ==============================
+//
+// Diagnostic helper to print the chip's color / format register state
+// before and after our mode-set sequence. Used to track down the R↔B
+// swap seen in 0.0.5 — we can't fix what we can't see, and the AST
+// register docs are sparse, so the empirical-comparison approach is
+// faster than guessing.
+
+static void
+dump_color_regs(const char* when)
+{
+	TRACE("== color/format regs %s ==\n", when);
+	TRACE("  VGAMR (misc out) = 0x%02x\n", vga_io_read8(AST_IO_VGAMR_R));
+	TRACE("  SR01 (clocking)  = 0x%02x\n", get_index_reg(AST_IO_VGASRI, 0x01));
+	TRACE("  SR02 (planemask) = 0x%02x\n", get_index_reg(AST_IO_VGASRI, 0x02));
+	TRACE("  SR03 (charmap)   = 0x%02x\n", get_index_reg(AST_IO_VGASRI, 0x03));
+	TRACE("  SR04 (memmode)   = 0x%02x\n", get_index_reg(AST_IO_VGASRI, 0x04));
+	TRACE("  GR05 (gfx mode)  = 0x%02x\n", get_index_reg(AST_IO_VGAGRI, 0x05));
+	TRACE("  GR06 (misc)      = 0x%02x\n", get_index_reg(AST_IO_VGAGRI, 0x06));
+	TRACE("  CR13 (pitch lo)  = 0x%02x\n", get_index_reg(AST_IO_VGACRI, 0x13));
+	TRACE("  CR17 (mode ctl)  = 0x%02x\n", get_index_reg(AST_IO_VGACRI, 0x17));
+	TRACE("  CR_A0 (ext ctl)  = 0x%02x\n", get_index_reg(AST_IO_VGACRI, 0xa0));
+	TRACE("  CR_A3 (depth)    = 0x%02x\n", get_index_reg(AST_IO_VGACRI, 0xa3));
+	TRACE("  CR_A8 (format)   = 0x%02x\n", get_index_reg(AST_IO_VGACRI, 0xa8));
+	TRACE("  CR_B0 (pitch hi) = 0x%02x\n", get_index_reg(AST_IO_VGACRI, 0xb0));
+	TRACE("  DAC PEL mask     = 0x%02x\n", vga_io_read8(0x46));	// 0x3C6
+}
+
+
 // === Public entry point ==================================================
 
 extern "C" status_t
@@ -513,6 +549,8 @@ ast_program_mode_1024x768()
 {
 	TRACE("program_mode: 1024x768@60Hz 32bpp on AST chip gen %d\n",
 		(int)gInfo->sharedInfo->chipGeneration);
+
+	dump_color_regs("BEFORE");
 
 	// Wait for vertical retrace so we don't reprogram mid-scanout.
 	ast_wait_for_vretrace();
@@ -547,6 +585,8 @@ ast_program_mode_1024x768()
 	// Framebuffer pitch and scanout base.
 	ast_set_offset_reg(1024 * 4);
 	ast_set_start_address(0);
+
+	dump_color_regs("AFTER");
 
 	TRACE("program_mode: done\n");
 	return B_OK;

@@ -12,6 +12,49 @@ line will open when Phase 3 actually programs a display mode.
 
 ---
 
+## [0.0.9] — 2026-05-28
+
+**First fully working Phase 3 release** — clean 1024×768 Haiku desktop on
+the AST2400 with correct colors.
+
+### Fixed
+
+- **CR_A8 bit 1 cleared for 32 bpp.** Linux's `ast_set_color_reg(32)`
+  sets `CR_A8 = 0x02`; doing the same on our AST2400 produces R↔B
+  swapped colors (yellow → cyan, blue → magenta). Per-boot register
+  dumps (added in 0.0.8) showed the VBIOS leaves bit 1 clear in 32 bpp
+  mode and the same memory contents scan out with correct colors.
+  Diverged from Linux here — Linux must compensate for the swap in
+  `ast_post.c` silicon-init code we haven't ported. Cleared bit 1 for
+  32 bpp; left the 16 bpp path at Linux's value (untested but matches
+  reference). Documented inline in `mode.cpp`'s `ast_set_color_reg`.
+
+### Added
+
+- **`dump_color_regs()`** diagnostic helper in `mode.cpp`, called from
+  `ast_program_mode_1024x768` before and after the mode-set sequence.
+  Logs VGAMR / SR01-04 / GR05-06 / CR13 / CR17 / CR_A0 / CR_A3 / CR_A8 /
+  CR_B0 / DAC PEL mask to syslog with "BEFORE" / "AFTER" markers. Was
+  added in 0.0.8 specifically to track down the CR_A8 issue; kept
+  enabled because the comparison is invaluable when porting future
+  silicon-init differences. Will become a build-flag-gated debug
+  dump once Phase 4 stabilises.
+
+### Skipped versions
+
+- **0.0.6** — attempted to fix the R↔B swap by switching the mode's
+  Haiku color space from `B_RGB32_LITTLE` to `B_RGB32_BIG`. Boot
+  hung at black screen with no network response; required hard
+  power-cycle + safe-mode delete. Linux confirms `XRGB8888` (= Haiku
+  `B_RGB32_LITTLE`) is the correct format; the issue was always
+  chip-side, not host-side. Reverted in 0.0.7.
+- **0.0.7** — functional revert of 0.0.6, equivalent to 0.0.5 with
+  baseline restored.
+- **0.0.8** — 0.0.7 + the `dump_color_regs()` diagnostic. The dumps
+  it produced informed the 0.0.9 fix.
+
+---
+
 ## [0.0.5] — 2026-05-28
 
 **Phase 3 lands: the chip is actually programmed.** `SET_DISPLAY_MODE`

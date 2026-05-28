@@ -286,6 +286,11 @@ static const display_mode kPhase2Mode = {
 		768,  771,  777,  806,	// v_display, sync_start, sync_end, total
 		B_POSITIVE_HSYNC | B_POSITIVE_VSYNC
 	},
+	// Reverted from B_RGB32_BIG after 0.0.6 hung the boot. Linux uses
+	// DRM_FORMAT_XRGB8888 (memory BGR-, same as B_RGB32_LITTLE) so this
+	// should be the right value; the purple-tinted-color issue seen in
+	// 0.0.5 is a chip-register problem to be tracked down separately,
+	// not a Haiku color-space mismatch.
 	B_RGB32_LITTLE,	// color space
 	1024,			// virtual_width
 	768,			// virtual_height
