@@ -12,6 +12,59 @@ line will open when Phase 3 actually programs a display mode.
 
 ---
 
+## [0.0.5] — 2026-05-28
+
+**Phase 3 lands: the chip is actually programmed.** `SET_DISPLAY_MODE`
+now writes real values to the AST's sequencer, CRTC, attribute,
+graphics, DAC, and PLL registers instead of being a no-op stub.
+On install, the display should switch to 1024×768@60 in 32 bpp —
+matching what we tell app_server, and replacing the stride-mismatched
+mess from 0.0.4.
+
+### Added
+
+- **`headers/private/graphics/ast/ast_regs.h`** — register constants
+  ported from Linux `drivers/gpu/drm/ast/ast_reg.h` + flag bits from
+  `ast_vbios.h` + DCLK index defines. Plus `ast_mode_info`,
+  `ast_std_table`, `ast_dclk_info` struct layouts.
+- **`src/add-ons/accelerants/ast/mode.cpp`** — Haiku port of:
+  - `ast_set_std_reg` — VGA sequencer/CRTC/attribute/graphics
+    defaults from the VBIOS standard tables (Linux
+    `ast_mode.c:200-243`, `ast_tables.h:36-107`).
+  - `ast_set_crtc_reg` — CRTC timing programming from a mode
+    descriptor (Linux `ast_mode.c:245-356`).
+  - `ast_set_offset_reg` — scanout pitch (Linux
+    `ast_mode.c:358-366`).
+  - `ast_set_dclk_reg` — pixel-clock PLL programming (Linux
+    `ast_mode.c:368-379`).
+  - `ast_set_color_reg` — color-depth selection (Linux
+    `ast_mode.c:381-408`).
+  - `ast_set_sync_reg` — H/V sync polarity (Linux
+    `ast_mode.c:419-432`).
+  - `ast_set_start_address` — scanout base address within BAR0
+    framebuffer (Linux `ast_mode.c:434-444`).
+  - `ast_set_vbios_mode_reg` — IPMI/iKVM mode-info hints (Linux
+    `ast_mode.c:176-198`).
+  - `ast_wait_for_vretrace` — bounded retrace wait so we don't
+    reprogram CRTC mid-scanout.
+  - **Tables**: `kStdTables[5]` (TextMode/EGA/VGA/HiC/TrueC), ported
+    verbatim from Linux `ast_tables.h`. `kDclkTable[16]` (VCLK25_175
+    through VCLK162), ported from Linux `ast_2000.c:158-186` — AST2400
+    inherits this table per `ast_2400_init()`.
+- **`accelerant.cpp`** — `set_display_mode` calls into
+  `ast_program_mode_1024x768()` instead of returning a no-op `B_OK`.
+
+### Known limitations (still)
+
+- Only the one hardcoded 1024×768@60 mode is supported. Mode-list
+  generation from EDID lands in Phase 4.
+- No per-silicon-rev quirks. AST2500 / AST2600 will use the AST2400
+  code path; deltas need hardware testing before being added.
+- No DAC gamma table programming (sticks with whatever VBIOS left).
+- No cursor support, no acceleration. Phase 5+.
+
+---
+
 ## [0.0.4] — 2026-05-28
 
 Fixes two Phase 2 bring-up bugs found on first install of 0.0.3.

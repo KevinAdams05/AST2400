@@ -330,6 +330,9 @@ ast_propose_display_mode(display_mode* target, const display_mode* /*low*/,
 }
 
 
+extern "C" status_t ast_program_mode_1024x768();
+
+
 extern "C" status_t
 ast_set_display_mode(display_mode* mode)
 {
@@ -338,15 +341,14 @@ ast_set_display_mode(display_mode* mode)
 	TRACE("set_display_mode(%u x %u)\n",
 		mode->virtual_width, mode->virtual_height);
 
-	// Phase 2 stub: accept the hardcoded mode but don't reprogram the
-	// chip. The display continues running whatever VBIOS POST set up.
-	// Phase 3 ports the CRTC + PLL + encoder sequences from Linux
-	// drivers/gpu/drm/ast/ast_mode.c.
 	if (mode->virtual_width != kPhase2Mode.virtual_width
 			|| mode->virtual_height != kPhase2Mode.virtual_height)
 		return B_NOT_SUPPORTED;
 
-	return B_OK;
+	// Phase 3: actually program the chip for 1024x768@60 @ 32bpp.
+	// See mode.cpp for the ported sequence (Linux drivers/gpu/drm/ast/
+	// ast_mode.c).
+	return ast_program_mode_1024x768();
 }
 
 

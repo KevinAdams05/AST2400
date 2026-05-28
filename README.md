@@ -111,9 +111,6 @@ want to cut your own build (or contribute a fix):
    ```
 4. Output: `dist/aspeed_gfx_unofficial-0.0.X-x86_64.hpkg`.
 
-See [`docs/STYLE_GUIDE.md`](docs/STYLE_GUIDE.md) for coding conventions
-before opening a PR.
-
 ---
 
 ## Logging Bugs / How to Help
@@ -132,6 +129,8 @@ If you can also boot Linux on the same hardware, the output of
 PRs are welcome. On your PR, indicate which board + BMC chip you tested on,
 and include the PCI ID + revision.
 
+Please adhere to the [`docs/STYLE_GUIDE.md`](docs/STYLE_GUIDE.md) for coding conventions
+before opening a PR. There is a PR checklist that outlines a few key things to check.
 ---
 
 ## Why GPL v2 (not MIT)

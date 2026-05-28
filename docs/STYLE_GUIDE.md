@@ -39,9 +39,7 @@ rules for convenience.
 
 Rationale: register-define lines and AtomBIOS-style table entries
 sometimes need to be a touch wider than 80. 100 covers those without
-abandoning the goal of readable narrow code. We are stricter than
-NimblePDF (140) because kernel driver code is closer to C and doesn't
-need to carry STL template-name length.
+abandoning the goal of readable narrow code.
 
 ### 1.2 Linux source is in scope as a porting reference
 
