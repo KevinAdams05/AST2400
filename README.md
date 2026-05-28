@@ -35,13 +35,14 @@ verification before the next starts.
 | Phase | Goal | Status |
 |---|---|---|
 | 1 | Probe + bind PCI device, map BARs, no display output | ✅ verified on Supermicro X11SSH-LN4F |
-| 2 | Accelerant skeleton — clones shared area, exposes mode list, no chip programming yet | 🟡 in progress |
-| 3 | Actual CRTC + PLL + encoder programming — drive a real mode | ⬜ not started |
-| 4 | EDID-driven mode list, polish, AST2500/2600 deltas | ⬜ not started |
+| 2 | Accelerant skeleton — clones shared area, exposes mode list | ✅ accelerant loads, app_server picks our driver |
+| 3 | Actual CRTC + PLL + encoder programming — drive a real mode | ✅ clean 1024×768@60Hz @ 32 bpp |
+| 4 | EDID-driven mode list, multi-mode support | 🟡 in progress |
+| 5 | AST2500 / AST2600 silicon-init deltas, polish | ⬜ not started |
 
-Until Phase 3 lands, the display continues running whatever VBIOS POST
-set up; this driver claims the PCI device and registers itself with
-app_server but doesn't actively program anything.
+As of 0.0.9 the driver actively programs the chip and produces a usable
+Haiku desktop at 1024×768. Only that single mode is exposed; Phase 4
+will replace the hardcoded mode with EDID-driven multi-mode support.
 
 ---
 
@@ -49,11 +50,17 @@ app_server but doesn't actively program anything.
 
 | Brand | Board | Chip | PCI ID (rev) | Status |
 |---|---|---|---|---|
-| Supermicro | X11SSH-LN4F (Xeon E3-1230v5) | AST2400 | `1a03:2000` (rev 0x30) | ✅ Phase 1 verified — probe, bind, BAR mapping, app_server open/close all clean |
+| Supermicro | X11SSH-LN4F (Xeon E3-1230v5) | AST2400 | `1a03:2000` (rev 0x30) | ✅ Phase 3 — clean 1024×768@60Hz desktop, correct colors |
 
-### Verification details (Phase 1)
+### Phase 3 — Haiku desktop running on the AST2400
 
-Boot syslog on a verified system shows:
+![Haiku desktop at 1024×768 on AST2400](docs/screenshots/phase3-1024x768.png)
+
+Haiku Screen preferences reports the active driver as **ASPEED Graphics
+(AST2400)** at **1024 × 768**, **32 bits/pixel**, **60 Hz** — driven
+through the BMC's onboard VGA output on a Supermicro X11SSH-LN4F.
+
+### Driver bring-up syslog (Phase 1 verification)
 
 ```
 ast: init_hardware()
@@ -64,12 +71,11 @@ ast: ast_open(graphics/ast_060000)
 ast:   BAR0 (framebuffer): phys 0xde000000 size 16777216 bytes (16 MB)
 ast:   BAR1 (MMIO regs):   phys 0xdf000000 size 131072 bytes
 ast: ast_open: device opened — AST2400 rev 0x30
-ast: ast_close()
-ast: ast_free()
+ast.accel: init_accelerant(fd=7)
+ast.accel: init_accelerant: AST chip gen 4 rev 0x30, fb 16 MB, MMIO 131072 B
+ast.mode: program_mode: 1024x768@60Hz 32bpp on AST chip gen 4
+ast.mode: program_mode: done
 ```
-
-The `ast_open → ast_close` round-trip is app_server probing for the
-accelerant. With the Phase 2 accelerant absent, it falls back to VESA.
 
 ---
 
