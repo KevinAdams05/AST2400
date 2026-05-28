@@ -1,0 +1,17 @@
+# Build output
+build/
+dist/
+
+# Editor temp files
+*.swp
+*~
+.DS_Store
+
+# Object files
+*.o
+*.a
+*.so
+
+# IDE
+.vscode/
+.idea/

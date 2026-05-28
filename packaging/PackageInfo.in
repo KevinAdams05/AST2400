@@ -1,0 +1,22 @@
+name			aspeed_gfx_unofficial
+version			@VERSION@-1
+architecture		x86_64
+summary			"Unofficial Haiku driver for ASPEED AST2400/2500/2600 BMC GPUs"
+description		"Native Haiku graphics driver for the ASPEED AST2x00 family of BMC integrated GPUs, found on most Supermicro and other enterprise server motherboards. Driver name 'ast', PCI vendor 0x1a03 device 0x2000. Distinguishes AST2100 through AST2600 generations at runtime via the PCI revision register. Install per-user by dropping in ~/config/packages/. This is an unofficial standalone package; not part of upstream Haiku."
+packager		"Kevin Adams <kevinadams05@gmail.com>"
+vendor			"Kevin Adams"
+licenses {
+	"GNU GPL v2"
+}
+copyrights {
+	"2026 Kevin Adams"
+}
+provides {
+	aspeed_gfx_unofficial = @VERSION@
+}
+requires {
+	haiku >= r1~beta5
+}
+urls {
+	"https://github.com/KevinAdams05/AST2400"
+}
