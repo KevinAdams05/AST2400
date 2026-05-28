@@ -12,6 +12,49 @@ line will open when Phase 3 actually programs a display mode.
 
 ---
 
+## [0.0.3] — 2026-05-28
+
+Phase 2 accelerant skeleton lands. The driver now ships both a kernel
+driver and an accelerant; app_server can load both halves and query the
+accelerant. **Display output is still whatever VBIOS POST set up — the
+accelerant stubs `SET_DISPLAY_MODE` and does not program the chip.**
+That's Phase 3 work.
+
+### Added
+
+- **`ast.accelerant`** — userspace accelerant addon.
+  - `INIT_ACCELERANT` clones the kernel driver's shared_info area into
+    user space, plus clones the MMIO and framebuffer BARs for future
+    Phase 3 register access.
+  - `GET_ACCELERANT_DEVICE_INFO` reports the detected chip generation
+    (AST2100/2200/2300/2400/2500/2600), framebuffer size, and DAC
+    speed.
+  - `ACCELERANT_MODE_COUNT` / `GET_MODE_LIST` expose a single
+    hardcoded 1024×768@60 mode. EDID-driven mode generation is Phase 4.
+  - `PROPOSE_DISPLAY_MODE` / `SET_DISPLAY_MODE` / `GET_DISPLAY_MODE`
+    accept only the hardcoded mode. `SET_DISPLAY_MODE` is a no-op —
+    it returns `B_OK` without programming the chip, since CRTC + PLL +
+    encoder sequences are Phase 3.
+  - `GET_FRAME_BUFFER_CONFIG` returns the cloned framebuffer base and
+    a 1024×4-byte stride. **The framebuffer is the chip's BAR0 — the
+    chip is currently scanning out whatever VBIOS programmed, so
+    drawing through this buffer is likely to look wrong until Phase 3
+    actually sets the matching CRTC state.**
+- **Build / package scripts** updated to handle both the kernel driver
+  and the accelerant in one pass.
+
+### Known limitations
+
+- **No real mode setting yet.** `SET_DISPLAY_MODE` doesn't touch the
+  chip. Display output remains whatever VBIOS programmed (typically
+  text-mode-ish 1024×768 or 800×600).
+- **One hardcoded mode.** EDID-driven mode-list generation lands in
+  Phase 4.
+- **No EDID readback.** The chip's DDC/I2C controller isn't being
+  exercised yet.
+
+---
+
 ## [0.0.2] — 2026-05-28
 
 First publicly-published build. Phase 1 (probe and bind) verified on real

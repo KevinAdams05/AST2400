@@ -7,13 +7,14 @@
 # Layout inside the .hpkg:
 #   add-ons/kernel/drivers/bin/ast
 #   add-ons/kernel/drivers/dev/graphics/ast  -> ../../bin/ast
+#   add-ons/accelerants/ast.accelerant
 #
 # Install path: per-user, by dropping the .hpkg in ~/config/packages/.
 #
-# Phase 1 caveat: this package ships only the kernel driver. There is no
-# accelerant yet, so app_server cannot drive a display through this
-# driver — it will probe and bind in syslog, then app_server will fall
-# back to VESA. Phase 2 will add the accelerant.
+# Phase 2 caveat: the accelerant in this package exposes only a single
+# hardcoded mode list and stubs SET_DISPLAY_MODE — the chip is NOT
+# actually programmed. Display continues running whatever VBIOS POST
+# set up. Phase 3 ports the real CRTC + PLL + encoder sequences.
 #
 # Usage:
 #   scripts/package.sh [VERSION]
@@ -44,9 +45,15 @@ BUILD_DIR="${REPO_ROOT}/build/${ARCH}"
 DIST_DIR="${REPO_ROOT}/dist"
 STAGING="${REPO_ROOT}/build/staging-${ARCH}"
 KERNEL_DRV="${BUILD_DIR}/ast"
+ACCELERANT="${BUILD_DIR}/ast.accelerant"
 
 if [ ! -f "$KERNEL_DRV" ]; then
 	echo "ERROR: built kernel driver missing: $KERNEL_DRV" >&2
+	echo "       Run scripts/build.sh first." >&2
+	exit 1
+fi
+if [ ! -f "$ACCELERANT" ]; then
+	echo "ERROR: built accelerant missing: $ACCELERANT" >&2
 	echo "       Run scripts/build.sh first." >&2
 	exit 1
 fi
@@ -55,8 +62,10 @@ echo "==> Staging package contents in $STAGING"
 rm -rf "$STAGING"
 mkdir -p "$STAGING/add-ons/kernel/drivers/bin"
 mkdir -p "$STAGING/add-ons/kernel/drivers/dev/graphics"
+mkdir -p "$STAGING/add-ons/accelerants"
 
 cp -v "$KERNEL_DRV" "$STAGING/add-ons/kernel/drivers/bin/ast"
+cp -v "$ACCELERANT" "$STAGING/add-ons/accelerants/ast.accelerant"
 ln -sf "../../bin/ast" "$STAGING/add-ons/kernel/drivers/dev/graphics/ast"
 
 echo "==> Generating .PackageInfo"

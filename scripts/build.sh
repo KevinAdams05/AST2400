@@ -43,40 +43,56 @@ if [ ! -d "$GENERATED" ]; then
 fi
 
 KERNEL_DRIVER_DST="$HAIKU_SRC/src/add-ons/kernel/drivers/graphics/ast"
+ACCELERANT_DST="$HAIKU_SRC/src/add-ons/accelerants/ast"
 HEADERS_DST="$HAIKU_SRC/headers/private/graphics/ast"
 
 echo "==> Creating ast/ subdirs in Haiku tree (no-op if already present)"
-mkdir -p "$KERNEL_DRIVER_DST" "$HEADERS_DST"
+mkdir -p "$KERNEL_DRIVER_DST" "$ACCELERANT_DST" "$HEADERS_DST"
 
 echo "==> Overlaying source"
 cp -v "$REPO_ROOT/src/add-ons/kernel/drivers/graphics/ast/"* \
 	"$KERNEL_DRIVER_DST/"
+cp -v "$REPO_ROOT/src/add-ons/accelerants/ast/"* \
+	"$ACCELERANT_DST/"
 cp -v "$REPO_ROOT/headers/private/graphics/ast/"*.h \
 	"$HEADERS_DST/"
 
-# Register the new subdir with the parent Jamfile if it isn't there yet.
-PARENT_JAMFILE="$HAIKU_SRC/src/add-ons/kernel/drivers/graphics/Jamfile"
-if ! grep -q "graphics ast ;" "$PARENT_JAMFILE" 2>/dev/null; then
-	echo "==> Registering ast/ with parent Jamfile"
+# Register the new subdirs with the parent Jamfiles if they aren't there yet.
+DRIVER_PARENT_JAMFILE="$HAIKU_SRC/src/add-ons/kernel/drivers/graphics/Jamfile"
+if ! grep -q "graphics ast ;" "$DRIVER_PARENT_JAMFILE" 2>/dev/null; then
+	echo "==> Registering kernel driver ast/ with parent Jamfile"
 	echo "SubInclude HAIKU_TOP src add-ons kernel drivers graphics ast ;" \
-		>> "$PARENT_JAMFILE"
+		>> "$DRIVER_PARENT_JAMFILE"
+fi
+
+ACCELERANT_PARENT_JAMFILE="$HAIKU_SRC/src/add-ons/accelerants/Jamfile"
+if ! grep -q "accelerants ast ;" "$ACCELERANT_PARENT_JAMFILE" 2>/dev/null; then
+	echo "==> Registering accelerant ast/ with parent Jamfile"
+	echo "SubInclude HAIKU_TOP src add-ons accelerants ast ;" \
+		>> "$ACCELERANT_PARENT_JAMFILE"
 fi
 
 echo ""
 echo "==> Building"
 cd "$GENERATED"
 JOBS="${JOBS:-$(nproc 2>/dev/null || echo 4)}"
-jam -q -j"$JOBS" ast
+jam -q -j"$JOBS" ast ast.accelerant
 
 echo ""
-echo "==> Extracting binary to $OUTPUT_DIR"
+echo "==> Extracting binaries to $OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
 BUILT_DRIVER="$GENERATED/objects/haiku/$ARCH/release/add-ons/kernel/drivers/graphics/ast/ast"
+BUILT_ACCEL="$GENERATED/objects/haiku/$ARCH/release/add-ons/accelerants/ast/ast.accelerant"
 if [ ! -f "$BUILT_DRIVER" ]; then
-	echo "ERROR: expected build output not found: $BUILT_DRIVER" >&2
+	echo "ERROR: expected kernel driver not found: $BUILT_DRIVER" >&2
+	exit 1
+fi
+if [ ! -f "$BUILT_ACCEL" ]; then
+	echo "ERROR: expected accelerant not found: $BUILT_ACCEL" >&2
 	exit 1
 fi
 cp -v "$BUILT_DRIVER" "$OUTPUT_DIR/ast"
+cp -v "$BUILT_ACCEL" "$OUTPUT_DIR/ast.accelerant"
 
 echo ""
 echo "==> Build complete:"
