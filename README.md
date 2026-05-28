@@ -29,20 +29,25 @@ Release history: see [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Project Status
 
-This driver is **early-stage**. Each phase below has to clear hardware
-verification before the next starts.
+This driver is **early-stage but usable**. Each phase below has to clear
+hardware verification before the next starts.
 
 | Phase | Goal | Status |
 |---|---|---|
 | 1 | Probe + bind PCI device, map BARs, no display output | ✅ verified on Supermicro X11SSH-LN4F |
 | 2 | Accelerant skeleton — clones shared area, exposes mode list | ✅ accelerant loads, app_server picks our driver |
 | 3 | Actual CRTC + PLL + encoder programming — drive a real mode | ✅ clean 1024×768@60Hz @ 32 bpp |
-| 4 | EDID-driven mode list, multi-mode support | 🟡 in progress |
+| 4 | Multi-mode support + EDID readback | ✅ 4.0 multi-mode list · 4.1 EDID via DDC · 4.2 1920×1080 |
+| — | Defensive BAR-assignment validation (Haiku #3) | ✅ 0.1.3 |
 | 5 | AST2500 / AST2600 silicon-init deltas, polish | ⬜ not started |
 
-As of 0.0.9 the driver actively programs the chip and produces a usable
-Haiku desktop at 1024×768. Only that single mode is exposed; Phase 4
-will replace the hardcoded mode with EDID-driven multi-mode support.
+As of 0.1.3 the driver is a fully usable Haiku graphics driver for the
+AST2400 / AST2500 / AST2600 family. It supports 640×480 through
+1920×1080 @ 60 Hz @ 32 bpp, dynamic mode switching from Screen
+preferences, EDID readback from the connected monitor, and defensive
+PCI-BAR-assignment validation. Remaining work (next phases) covers
+EDID-driven mode filtering, more 16:9 / widescreen modes, AST2500 /
+AST2600 silicon-init quirks, hardware cursor, and 2D acceleration.
 
 ---
 
@@ -50,7 +55,7 @@ will replace the hardcoded mode with EDID-driven multi-mode support.
 
 | Brand | Board | Chip | PCI ID (rev) | Status |
 |---|---|---|---|---|
-| Supermicro | X11SSH-LN4F (Xeon E3-1230v5) | AST2400 | `1a03:2000` (rev 0x30) | ✅ Phase 3 — clean 1024×768@60Hz desktop, correct colors |
+| Supermicro | X11SSH-LN4F (Xeon E3-1230v5) | AST2400 | `1a03:2000` (rev 0x30) | ✅ 0.1.3 — 1920×1080@60 verified · dynamic mode switching across 6 modes · EDID readback confirms HP V244h |
 
 ### Screenshot
 
@@ -156,11 +161,7 @@ licensing rationale.
 ## Source Material
 
 The Linux `drivers/gpu/drm/ast/` driver is the primary porting source for
-register sequences and silicon-revision handling. The
-**AST2500 Software Programming Guide** (833 pages, 2017) is the
-authoritative vendor reference — ASPEED maintained register-level backward
-compatibility from AST2300 through AST2500, so the same SPG covers AST2400
-modulo a small set of well-documented deltas.
+register sequences and silicon-revision handling. 
 
 `xf86-video-ast` (the older X11 driver) is a secondary reference,
 MIT-licensed.

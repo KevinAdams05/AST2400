@@ -822,20 +822,12 @@ Primary porting reference. Path:
 | `ast_2000.c` | `ast_2000_dclk_table[]` — PLL parameters |
 | `ast_2400.c` | AST2400-specific quirks (chip we target) |
 
-### Vendor documentation
-
-Primary documentation source. Path: `~/Code/Syllable/RefDocs/GPU/Aspeed/`.
-
-| File | Coverage |
-|---|---|
-| `AST2500.pdf` | AST2500 Software Programming Guide, 833 pp., May 2017. Authoritative reference for AST2300–2500 register layout. AST2400 inherits the same register set per ASPEED backward-compatibility policy. |
-| `ast2600_datasheet.pdf` | AST2600 datasheet, 1580 pp., June 2022. Needed when AST2600 silicon-init work begins. |
 
 ### Haiku conventions
 
 | Resource | Used for |
 |---|---|
-| [Haiku graphics driver model](https://www.haiku-os.org/development/coding-guidelines) | Kernel driver / accelerant split, `device_hooks` shape, Jam build conventions |
+| Haiku graphics driver model | Kernel driver / accelerant split, `device_hooks` shape, Jam build conventions |
 | `src/add-ons/kernel/drivers/graphics/skeleton/` | Structural starting point (with SMAP-aware updates) |
 | `src/add-ons/kernel/drivers/graphics/radeon_hd/` | Modern Haiku graphics driver — used as reference for ioctl SMAP-safe patterns, area-clone protection flags, accelerant logging style |
 | `src/add-ons/accelerants/common/` | `libaccelerantscommon.a` — provides Haiku-side helpers for mode-list generation, EDID parsing (which we'll consume in Phase 4.4) |
