@@ -37,6 +37,7 @@ into upstream Linux.
 - [Phase 4.1 — EDID Readback via DDC](#phase-41--edid-readback-via-ddc)
 - [Phase 4.2 — 1920×1080 and Extended DCLK Table](#phase-42--1920x1080-and-extended-dclk-table)
 - [0.1.3 — Defensive BAR Validation](#013--defensive-bar-validation)
+- [0.1.4 — 16:10 Widescreen Modes](#014--1610-widescreen-modes)
 - [Bring-up Failures and Lessons](#bring-up-failures-and-lessons)
   - [SMAP violation on first ioctl (0.0.1)](#smap-violation-on-first-ioctl-001)
   - [Cloneable area flags (0.0.3 → 0.0.4)](#cloneable-area-flags-003--004)
@@ -554,9 +555,92 @@ unclaimed; Haiku's VESA fallback handles display output.
 
 ---
 
+## 0.1.4 — 16:10 Widescreen Modes
+
+**Released:** 0.1.4 — 2026-06-27.
+
+**Scope.** Add the four standard 16:10 resolutions — 1280×800 (WXGA),
+1440×900 (WXGA+), 1680×1050 (WSXGA+), and 1920×1200 (WUXGA) — so
+16:10 panels run at native resolution instead of letterboxing down to
+a 16:9 mode. Ported from Linux `ast_vbios.c` (`res_1280x800` /
+`res_1440x900` / `res_1680x1050` / `res_1920x1200`).
+
+### No new PLL work
+
+This dropped in cleanly because the DCLK table extension done back in
+0.1.2 (for 1920×1080) already added the PLL parameters these modes
+need — VCLK83\_5 (0x11), VCLK106\_5 (0x12), VCLK146\_25 (0x13), and
+VCLK154 (0x10) were ported "for table completeness" at the time and
+sat unused. 0.1.4 simply wires four mode entries to them. The mode
+arrays grow from 6 to 10 lockstep entries (`kModeList[]` in `mode.cpp`,
+`kHaikuModes[]` in `accelerant.cpp`, same index in both). Entries were
+*appended*, not inserted, so the `sCurrentModeIndex = 2` default still
+points at 1024×768.
+
+### The 1920×1200 pixel-clock constraint
+
+1920×1200 has two common timings: standard-blanking DMT at **193 MHz**
+and CVT reduced-blanking at **154 MHz**. The AST2400 RAMDAC tops out
+around 165 MHz (`GET_PIXEL_CLOCK_LIMITS` reports a 165 MHz ceiling),
+so the 193 MHz timing is unreachable — we use the 154 MHz
+reduced-blanking variant, which is also what real WUXGA panels report
+as their EDID *preferred* timing. The other three 16:10 modes are
+comfortably under the ceiling and use standard (non-RB) DMT timings.
+
+| Mode | Pixel clock | DCLK index | Blanking |
+|---|---|---|---|
+| 1280×800 | 83.5 MHz | VCLK83\_5 | standard DMT |
+| 1440×900 | 106.5 MHz | VCLK106\_5 | standard DMT |
+| 1680×1050 | 146.25 MHz | VCLK146\_25 | standard DMT |
+| 1920×1200 | 154 MHz | VCLK154 | reduced-blanking |
+
+### Sync polarity — mind the SyncXY convention
+
+Linux's `ast_vbios.h` defines `SyncPN`, `SyncNP`, etc. where the
+**first** letter is the *vertical* polarity and the second is
+horizontal — easy to read backwards. So:
+
+- 1280×800 / 1440×900 / 1680×1050 are `SyncPN` → V positive, H
+  negative → `AST_FLAG_PVSYNC | AST_FLAG_NHSYNC`.
+- 1920×1200 (RB) is `SyncNP` → V negative, H positive →
+  `AST_FLAG_NVSYNC | AST_FLAG_PHSYNC`.
+
+`ast_set_sync_reg()` only acts on the two negative-polarity flags
+(setting bits 6/7 of the Misc Output register), so getting these
+right is what makes the monitor lock instead of showing "out of
+range."
+
+### Flags omitted
+
+As with 1920×1080, Linux sets `AST2500PreCatchCRT` on the
+reduced-blanking variants; it's AST2500/2600-only and a no-op on
+AST2400, so we leave it off our entries.
+
+### Verification
+
+On the Supermicro X11SSH-LN4F, driving an **ASUS WUXGA panel**. EDID
+readback reports the panel's preferred timing exactly:
+
+```
+ast.ddc: manufacturer: AUS  product: 0x2487  serial: 0x01010101
+ast.ddc: week 31  year 2025  EDID ver 1.3
+ast.ddc: preferred timing: 1920 x 1200 @ 154000 kHz pixel clock
+```
+
+Switching to 1920×1200 in Screen preferences programs cleanly
+(`program_mode: 1920x1200@60Hz 32bpp` → done, no KDL) and the picture
+is sharp and correctly positioned.
+
+> **Note:** EDID-driven *auto-selection* is still not implemented
+> (that's the remaining Phase 4.x work). app_server defaults to a
+> previously-used mode rather than reading the EDID preferred timing,
+> so 16:10 has to be selected manually in Screen preferences once.
+
+---
+
 ## Bring-up Failures and Lessons
 
-The driver's journey from 0.0.1 to 0.1.3 hit four instructive
+The driver's journey from 0.0.1 to 0.1.4 hit four instructive
 failures. Each is worth a section because the pattern of "test on
 hardware → observe → narrow → fix" generalizes to future graphics-
 driver work.

@@ -37,17 +37,19 @@ hardware verification before the next starts.
 | 1 | Probe + bind PCI device, map BARs, no display output | ✅ verified on Supermicro X11SSH-LN4F |
 | 2 | Accelerant skeleton — clones shared area, exposes mode list | ✅ accelerant loads, app_server picks our driver |
 | 3 | Actual CRTC + PLL + encoder programming — drive a real mode | ✅ clean 1024×768@60Hz @ 32 bpp |
-| 4 | Multi-mode support + EDID readback | ✅ 4.0 multi-mode list · 4.1 EDID via DDC · 4.2 1920×1080 |
+| 4 | Multi-mode support + EDID readback | ✅ 4.0 multi-mode list · 4.1 EDID via DDC · 4.2 1920×1080 · 0.1.4 16:10 modes |
 | — | Defensive BAR-assignment validation (Haiku #3) | ✅ 0.1.3 |
 | 5 | AST2500 / AST2600 silicon-init deltas, polish | ⬜ not started |
 
-As of 0.1.3 the driver is a fully usable Haiku graphics driver for the
+As of 0.1.4 the driver is a fully usable Haiku graphics driver for the
 AST2400 / AST2500 / AST2600 family. It supports 640×480 through
-1920×1080 @ 60 Hz @ 32 bpp, dynamic mode switching from Screen
-preferences, EDID readback from the connected monitor, and defensive
-PCI-BAR-assignment validation. Remaining work (next phases) covers
-EDID-driven mode filtering, more 16:9 / widescreen modes, AST2500 /
-AST2600 silicon-init quirks, hardware cursor, and 2D acceleration.
+1920×1200 @ 60 Hz @ 32 bpp — including the four standard 16:10
+resolutions (1280×800, 1440×900, 1680×1050, 1920×1200) — dynamic mode
+switching from Screen preferences, EDID readback from the connected
+monitor, and defensive PCI-BAR-assignment validation. Remaining work
+(next phases) covers EDID-driven mode auto-selection, additional 16:9
+modes, AST2500 / AST2600 silicon-init quirks, hardware cursor, and 2D
+acceleration.
 
 ---
 
@@ -55,7 +57,7 @@ AST2600 silicon-init quirks, hardware cursor, and 2D acceleration.
 
 | Brand | Board | Chip | PCI ID (rev) | Status |
 |---|---|---|---|---|
-| Supermicro | X11SSH-LN4F (Xeon E3-1230v5) | AST2400 | `1a03:2000` (rev 0x30) | ✅ 0.1.3 — 1920×1080@60 verified · dynamic mode switching across 6 modes · EDID readback confirms HP V244h |
+| Supermicro | X11SSH-LN4F (Xeon E3-1230v5) | AST2400 | `1a03:2000` (rev 0x30) | ✅ 0.1.4 — 1920×1200@60 (16:10) verified on ASUS WUXGA panel · 1920×1080@60 on HP V244h · dynamic mode switching across 10 modes · EDID readback |
 
 ### Screenshot
 

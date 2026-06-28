@@ -15,6 +15,57 @@ are reserved retroactively for those milestones and were never built.
 
 ---
 
+## [0.1.4] — 2026-06-27
+
+**16:10 widescreen modes.** Adds the four standard 16:10 resolutions
+to the mode list, so monitors that prefer a 16:10 panel (the common
+24″ WUXGA, 22″ WSXGA+, etc.) get their native resolution instead of
+falling back to a letterboxed 16:9 mode.
+
+### Added
+
+- **1280×800@60 (WXGA)**, **1440×900@60 (WXGA+)**,
+  **1680×1050@60 (WSXGA+)**, and **1920×1200@60 (WUXGA)** mode entries
+  in both `kModeList[]` (`mode.cpp`, hardware timing + PLL) and
+  `kHaikuModes[]` (`accelerant.cpp`, Haiku `display_mode`). Ported from
+  Linux `ast_vbios.c` (`res_1280x800` / `res_1440x900` / `res_1680x1050`
+  / `res_1920x1200`). The mode arrays grow from 6 to 10 lockstep entries.
+- All four reuse PLL indices already present in `kDclkTable[]` since
+  0.1.2 (VCLK83_5, VCLK106_5, VCLK146_25, VCLK154) — no new PLL math.
+
+### Pixel-clock notes
+
+- The three smaller modes use their standard (non-reduced-blanking)
+  VESA DMT timings: 83.5 / 106.5 / 146.25 MHz.
+- **1920×1200 uses CVT reduced-blanking (154 MHz)** deliberately. Its
+  standard-blanking clock is 193 MHz, well over the AST2400's ~165 MHz
+  RAMDAC ceiling; the reduced-blanking variant is the only 1920×1200
+  timing the DAC can drive. This matches the EDID *preferred* timing
+  reported by tested WUXGA panels (which is also 154 MHz RB).
+- Sync polarity mapped from Linux's `SyncXY` macros, where the first
+  letter is **V**ertical: 1280×800 / 1440×900 / 1680×1050 are `SyncPN`
+  (V-pos, H-neg); 1920×1200 is `SyncNP` (V-neg, H-pos).
+
+### Skipped
+
+- `AST2500PreCatchCRT` — Linux sets it on the reduced-blanking variants,
+  but it's AST2500/2600-only (gated on `crtc_hsync_precatch_needed`), so
+  it's omitted on the AST2400 path, consistent with the 1920×1080 entry.
+- EDID-driven auto-selection still isn't wired (Phase 4.2 / 4.4): the
+  modes appear in Screen preferences and program correctly, but
+  app_server won't pick 16:10 automatically from the EDID preferred
+  timing — pick it manually once.
+
+### Verified
+
+- Supermicro X11SSH-LN4F (AST2400 rev 0x30), driving an **ASUS WUXGA
+  panel at 1920×1200@60 @ 32 bpp** over the onboard VGA. EDID readback
+  reports the panel's preferred timing as 1920×1200 @ 154 MHz — an exact
+  match for the added mode. Mode programs cleanly (no KDL), picture
+  confirmed good.
+
+---
+
 ## [0.1.3] — 2026-05-28
 
 **Defensive hardening for Haiku PCI BAR-assignment bug.**

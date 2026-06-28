@@ -337,6 +337,24 @@ static const display_mode kHaikuModes[] = {
 	AST_HAIKU_MODE(148500, 1920, 2008, 2052, 2200,
 		1080, 1084, 1089, 1125,
 		B_POSITIVE_HSYNC | B_POSITIVE_VSYNC),
+
+	/* --- 16:10 widescreen --- */
+	/* 1280x800@60   — 83.5 MHz, neg-H pos-V — WXGA, DMT */
+	AST_HAIKU_MODE( 83500, 1280, 1352, 1480, 1680,
+		800, 803, 809, 831,
+		B_POSITIVE_VSYNC),
+	/* 1440x900@60   — 106.5 MHz, neg-H pos-V — WXGA+, DMT */
+	AST_HAIKU_MODE(106500, 1440, 1520, 1672, 1904,
+		900, 903, 909, 934,
+		B_POSITIVE_VSYNC),
+	/* 1680x1050@60  — 146.25 MHz, neg-H pos-V — WSXGA+, DMT */
+	AST_HAIKU_MODE(146250, 1680, 1784, 1960, 2240,
+		1050, 1053, 1059, 1089,
+		B_POSITIVE_VSYNC),
+	/* 1920x1200@60  — 154 MHz reduced-blanking, pos-H neg-V — WUXGA */
+	AST_HAIKU_MODE(154000, 1920, 1968, 2000, 2080,
+		1200, 1203, 1209, 1235,
+		B_POSITIVE_HSYNC),
 };
 
 static const uint32 kHaikuModeCount

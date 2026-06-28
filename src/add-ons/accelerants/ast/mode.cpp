@@ -189,6 +189,41 @@ const struct ast_mode_info kModeList[] = {
 	  AST_FLAG_PHSYNC | AST_FLAG_PVSYNC | AST_FLAG_CHARX8DOT
 		| AST_FLAG_WIDESCREEN | AST_FLAG_NEWMODEINFO,
 	  60, 1, 0x38 },
+
+	/* === 16:10 widescreen modes. Pixel clocks chosen to fit the AST2400's
+	 * ~165 MHz DAC ceiling: the three smaller modes use their standard
+	 * (non-reduced-blanking) VESA DMT timings, while 1920x1200 uses CVT
+	 * reduced-blanking (154 MHz) because its non-RB clock (193 MHz) would
+	 * overrun the DAC. Ported from Linux ast_vbios.c res_1280x800 /
+	 * res_1440x900 / res_1680x1050 / res_1920x1200. The AST2500PreCatchCRT
+	 * flag Linux sets on the reduced-blanking variants is AST2500/2600-only
+	 * (quirks->crtc_hsync_precatch_needed), so we omit it on the AST2400
+	 * path — same reasoning as the 1920x1080 entry above. === */
+
+	/* 1280x800@60 — WXGA, VESA DMT. SyncPN: H negative, V positive. */
+	{ 1680, 1280, 72, 128, 831, 800, 3, 6, AST_VCLK83_5,
+	  AST_FLAG_NHSYNC | AST_FLAG_PVSYNC | AST_FLAG_CHARX8DOT
+		| AST_FLAG_WIDESCREEN | AST_FLAG_NEWMODEINFO,
+	  60, 2, 0x35 },
+
+	/* 1440x900@60 — WXGA+, VESA DMT. SyncPN: H negative, V positive. */
+	{ 1904, 1440, 80, 152, 934, 900, 3, 6, AST_VCLK106_5,
+	  AST_FLAG_NHSYNC | AST_FLAG_PVSYNC | AST_FLAG_CHARX8DOT
+		| AST_FLAG_WIDESCREEN | AST_FLAG_NEWMODEINFO,
+	  60, 2, 0x36 },
+
+	/* 1680x1050@60 — WSXGA+, VESA DMT. SyncPN: H negative, V positive. */
+	{ 2240, 1680, 104, 176, 1089, 1050, 3, 6, AST_VCLK146_25,
+	  AST_FLAG_NHSYNC | AST_FLAG_PVSYNC | AST_FLAG_CHARX8DOT
+		| AST_FLAG_WIDESCREEN | AST_FLAG_NEWMODEINFO,
+	  60, 2, 0x37 },
+
+	/* 1920x1200@60 — WUXGA, CVT reduced-blanking (154 MHz fits the DAC).
+	 * SyncNP: H positive, V negative. */
+	{ 2080, 1920, 48, 32, 1235, 1200, 3, 6, AST_VCLK154,
+	  AST_FLAG_PHSYNC | AST_FLAG_NVSYNC | AST_FLAG_CHARX8DOT
+		| AST_FLAG_WIDESCREEN | AST_FLAG_NEWMODEINFO,
+	  60, 1, 0x34 },
 };
 
 const uint32 kModeCount = sizeof(kModeList) / sizeof(kModeList[0]);
